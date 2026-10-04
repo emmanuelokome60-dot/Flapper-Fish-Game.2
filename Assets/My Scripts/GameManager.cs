@@ -345,7 +345,7 @@ public class GameManager : MonoBehaviour
     {
         if (scoreTextCounter == null) return;
 
-        scoreTextCounter.text = "Distance Count: " + Distance;
+        scoreTextCounter.text = "Distance: " + Distance;
     }
 
     // Only the run count clears. TotalCoins is the wallet and keeps climbing.
