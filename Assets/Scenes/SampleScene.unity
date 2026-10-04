@@ -417,7 +417,7 @@ Transform:
   m_GameObject: {fileID: 193815492}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -7, y: 0.21, z: 0}
+  m_LocalPosition: {x: -5.653, y: 0.21, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1404,8 +1404,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 103.32438, y: -51.393066}
-  m_SizeDelta: {x: 457.3413, y: 102.7858}
+  m_AnchoredPosition: {x: 36, y: -70.512}
+  m_SizeDelta: {x: 1018.1, y: 141.02}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &678708312
 MonoBehaviour:
@@ -1427,12 +1427,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '0
+  m_text: 'Distance Score: 0
 
 '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f8cb5e1dfab208b478cfeaf0e7ea75ec, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: -596459923299121364, guid: f8cb5e1dfab208b478cfeaf0e7ea75ec, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1456,8 +1456,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 90
-  m_fontSizeBase: 90
+  m_fontSize: 75
+  m_fontSizeBase: 75
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1498,7 +1498,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &678708313
@@ -1635,6 +1635,7 @@ MonoBehaviour:
   coinIconSize: 80
   coinIconInset: 0
   coinIconTextGap: 8
+  unitsPerSecond: 5
   startFractionFromLeft: 0.3333
 --- !u!4 &706398571
 Transform:

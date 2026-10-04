@@ -49,6 +49,18 @@ public class GameManager : MonoBehaviour
     [Tooltip("Space between the icon and the number.")]
     [SerializeField] private float coinIconTextGap = 8f;
 
+    [Header("Distance")]
+    // Shown on scoreTextCounter, which now carries the distance rather than the rock score.
+    // The field keeps its name on purpose: renaming it would empty the Inspector slot, and the
+    // scene has only the one numeric text object. A separate distanceTextCounter field was
+    // wired to that same object, which is what made the counter flicker between two writers.
+    // Deliberately NOT [FormerlySerializedAs("distancePerSecond")]. That field was saved as 0,
+    // which reads as "start counting from 0" but actually means the number never moves. The
+    // rename orphans it so this default applies. Min stops 0 being entered again.
+    [Tooltip("How fast the number climbs, in world units per second. 5 matches the rocks.")]
+    [Min(0.1f)]
+    [SerializeField] private float unitsPerSecond = 5f;
+
     [Header("Player")]
     // Deliberately NOT [FormerlySerializedAs("startMarginFromLeft")]. That field held 1.9 WORLD
     // UNITS; this one holds a FRACTION, so 1.9 would start the fish 1.9 screen-widths across.
@@ -65,6 +77,10 @@ public class GameManager : MonoBehaviour
 
     // Lifetime wallet, banked now so nothing is lost before the skin shop is built
     public int TotalCoins { get; private set; }
+
+    // How far this run has travelled, in whole world units
+    public int Distance { get; private set; }
+    private float distanceTravelled;
 
     private const string COINS_KEY = "Coins";
 
@@ -102,6 +118,16 @@ public class GameManager : MonoBehaviour
             Debug.LogError("GameManager: no CoinSpawner on the spawner object. Add the Coin Spawner component to SpawnObstacles. The game still runs, just with no coins.", this);
         }
 
+        // A counter is not a button. Any Graphic with Raycast Target left on reports as
+        // "pointer over UI", and SwimPressed() refuses to swim while that is true, so a tap
+        // landing on a counter is silently swallowed. The run counter is 1018x141 at the top
+        // of the screen, which is a lot of dead area. Done here rather than by unticking the
+        // box in the Inspector, so a new counter cannot reintroduce it.
+        foreach (TMP_Text counter in new[] { scoreTextCounter, coinText })
+        {
+            if (counter != null) counter.raycastTarget = false;
+        }
+
         TotalCoins = PlayerPrefs.GetInt(COINS_KEY, 0);
         BuildCoinIcon();
         ShowCoins();
@@ -111,6 +137,19 @@ public class GameManager : MonoBehaviour
     {
         // timeScale 0 in here freezes the fish, the background and the obstacles at once
         BackToMenu();
+    }
+
+    private void Update()
+    {
+        // Time.deltaTime is 0 whenever timeScale is, so the menu, pause and game over all
+        // stop the counter without needing a flag of their own
+        distanceTravelled += unitsPerSecond * ObstacleMovement.SpeedMultiplier * Time.deltaTime;
+
+        int whole = (int)distanceTravelled;
+        if (whole == Distance) return;
+
+        Distance = whole;
+        ShowDistance();
     }
 
     public void GameOver()
@@ -152,7 +191,8 @@ public class GameManager : MonoBehaviour
         // Every run starts from zero
         ResetScore();
         ResetCoins();
-        ShowScore(true);
+        ResetDistance();
+        ShowRunCounters(true);
 
         // The run starts on PLAY. Breathing room is the spawner's lead-in plus the swim in
         // from the right edge.
@@ -188,9 +228,10 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         ResetScore();
         ResetCoins();
+        ResetDistance();
 
-        // The menu has its own artwork, so the counter is out of the way there
-        ShowScore(false);
+        // The menu has its own artwork, so the counters are out of the way there
+        ShowRunCounters(false);
 
         gameOverText.gameObject.SetActive(false);
         pauseButton.SetActive(false);
@@ -278,7 +319,6 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
 
         Score++;
-        scoreTextCounter.text = Score.ToString();
     }
 
     // Called by CoinPickup when the fish swims into a coin
@@ -290,6 +330,22 @@ public class GameManager : MonoBehaviour
         TotalCoins++;
         PlayerPrefs.SetInt(COINS_KEY, TotalCoins);
         ShowCoins();
+    }
+
+    private void ResetDistance()
+    {
+        distanceTravelled = 0f;
+        Distance = 0;
+        ShowDistance();
+    }
+
+    // The only place this counter's text is written. Two writers on one TMP_Text is what
+    // made it flicker. Tolerates an empty slot, like the coin counter.
+    private void ShowDistance()
+    {
+        if (scoreTextCounter == null) return;
+
+        scoreTextCounter.text = "Distance Count: " + Distance;
     }
 
     // Only the run count clears. TotalCoins is the wallet and keeps climbing.
@@ -341,15 +397,20 @@ public class GameManager : MonoBehaviour
         image.raycastTarget = false;
     }
 
-    // The counter sits on the Canvas next to the menu, so nothing shows it unless we do
-    private void ShowScore(bool visible)
+    // Both counters sit on the Canvas next to the menu, so nothing shows them unless we do.
+    // The distance counter is saved disabled in the scene and the coin counter saved enabled,
+    // so this is what gets them agreeing: both come on with the run and go with the menu.
+    // Game over leaves them up on purpose, so the final numbers can be read.
+    private void ShowRunCounters(bool visible)
     {
-        scoreTextCounter.gameObject.SetActive(visible);
+        foreach (TMP_Text counter in new[] { scoreTextCounter, coinText })
+        {
+            if (counter != null) counter.gameObject.SetActive(visible);
+        }
     }
 
     private void ResetScore()
     {
         Score = 0;
-        scoreTextCounter.text = "0";
     }
 }

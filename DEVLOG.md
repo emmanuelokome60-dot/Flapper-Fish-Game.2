@@ -972,6 +972,217 @@ set, no tooltip over 90, no CR reintroduced. Then `dotnet build`: 0 errors, 0 wa
 Worth keeping as the recipe. The skeleton comparison is what makes a comment pass safe, because
 it turns "I was careful" into something checkable.
 
+## Distance counter (2026-10-05)
+
+`Distance Score Counter` had been sitting in the scene unwired: a TextMeshProUGUI at font 90,
+saved with `m_IsActive: 0` and its text set to `0`, with no script referencing it. The project
+had no notion of distance at all, so that had to be built rather than just hooked up.
+
+It now reads `Distance Count: 0` at the start of a run and counts up from there.
+
+| Added to `GameManager` | |
+|---|---|
+| `distanceTextCounter` | the Inspector slot for the counter |
+| `unitsPerSecond` | 5, matching the rocks' own speed |
+| `Distance` | whole world units travelled this run |
+| `Update()` | the accumulator; GameManager had no Update before |
+| `ResetDistance()`, `ShowDistance()` | mirroring the coin pair |
+
+Distance is `unitsPerSecond * ObstacleMovement.SpeedMultiplier * Time.deltaTime`, accumulated
+each frame. Using the shared multiplier means the number tracks what actually slides past, so it
+speeds up as the difficulty ramp climbs from 0.7 to 1.6 rather than ticking at a flat rate.
+
+**No paused/playing flag was needed.** `Time.deltaTime` is already 0 whenever `timeScale` is, so
+the menu, pause and game over all stop the counter for free. The text is only rewritten when the
+whole-unit value changes, so it is not touched 60 times a second.
+
+`ShowScore(bool)` became `ShowRunCounters(bool)` and now toggles both HUD counters together. The
+old name would have been a lie once it handled two, and both appear and disappear at the same
+moments anyway. Two call sites.
+
+The counter is saved disabled in the scene, which is fine: `ShowRunCounters(true)` is what turns
+it on when a run starts, exactly as it does for the score.
+
+### Still to wire
+
+`distanceTextCounter` is an empty slot until Distance Score Counter is dragged onto the
+GameManager in the Inspector. `ShowDistance()` and `ShowRunCounters()` both null-check it, so the
+game runs without it, just with no distance shown.
+
+`distancePerSecond` was saved as 0 almost immediately, and not by the serialization trap this
+time: the name reads as a starting value, so 0 looked like "count up from zero". It is a rate, and
+at 0 the number never moves.
+
+The field is now `unitsPerSecond`, renamed rather than reset. A saved value beats a script
+default, so changing the default alone would not have helped; the rename orphans the saved 0 and
+lets 5 apply with no scene edit, which also meant nothing had to be written while Unity held the
+scene open. `[FormerlySerializedAs]` is deliberately absent for the same reason. `[Min(0.1f)]`
+now stops 0 being entered at all, since an empty text slot is the way to turn the counter off.
+
+Worth remembering as a general point: the serialization trap is a saved 0 beating a good default,
+and the fix is always the rename. This was the same symptom from a different cause, and the same
+fix worked.
+
+## The distance counter was eating taps (2026-10-05)
+
+Reported as the fish stuttering while swimming up and down the cave. It was not the text
+rendering and not the physics: the counter was swallowing the taps.
+
+`PlayerControllerScript.SwimPressed()` refuses to swim while
+`EventSystem.current.IsPointerOverGameObject()` is true, which is correct -- a tap on Pause or
+Restart must not also flap the fish. But any UI Graphic with Raycast Target ticked counts as
+"pointer over UI", and every HUD text in this scene has it on. The distance counter is 1018 x 141
+at the top centre of the screen, so that whole strip stopped swimming the fish. Tapping to climb
+is exactly when a thumb lands there, which is why it showed up as up-and-down movement.
+
+This was introduced by the counter itself. It had been sitting in the scene with
+`m_IsActive: 0`, so its raycast target never mattered until `ShowRunCounters(true)` began
+enabling it at the start of a run.
+
+`GameManager.Awake()` now clears `raycastTarget` on all three counters it owns -- score, coins and
+distance. Fixed in code rather than by unticking the box in the Inspector, so a counter added
+later cannot bring it back, and in one place rather than three because the score and coin
+counters had the same latent fault. They had just never been big enough to notice.
+
+`BuildCoinIcon()` had already been doing this for the coin sprite since the day it was written,
+with the comment "Never eat a tap meant for the game". The knowledge was in the project; it
+simply had not been applied to the text objects.
+
+## Two counters wired to one text (2026-10-05)
+
+Reported as the distance text glitching while the fish swam up and down the cave. The raycast
+fix above was a real bug but not this one, and the text itself was never at fault.
+
+`GameManager` had both slots pointing at the same object:
+
+```
+scoreTextCounter     -> Distance Score Counter
+distanceTextCounter  -> Distance Score Counter
+```
+
+So two writers fought over one label. `ShowDistance()` writes `Distance Count: 123` about five
+times a second, and `AddScore()` writes a bare `Score.ToString()` every time a gap is cleared.
+Each stamped over the other.
+
+That is also why it tracked the fish going up and down: that is when `ScoreTrigger` fires. Every
+point replaced the distance text with a plain number until the next distance tick put it back.
+The symptom pointed at the text because the text was the only visible part; the fault was in the
+Inspector.
+
+Diagnosis took three wrong guesses first -- render order, layout fitters, box overlap -- because
+each was checked against the scene in isolation. Dumping every `GameManager` slot with its target
+object's name resolved it immediately. Worth doing that first next time a UI symptom has no
+obvious cause: the wiring is data, and it can be read.
+
+### Distance is the HUD score now
+
+The fix was a choice, not just a rewiring: Score Text Counter is cleared and the rock count comes
+off the HUD entirely. `Score` keeps counting, so nothing is lost and `ScoreTrigger` is untouched.
+
+The rock count was the wrong number to show. This file's own rough edges already note that both
+rows score, so points come at roughly twice the rate of Flappy Bird's pipes. `ScoreTrigger` sits
+on all five prefabs in `Cave Walls/`, so that is live rather than theoretical. Its label had also
+been abandoned in practice long before today: `Text (TMP)` is in the scene at `m_IsActive: 0` and
+`sizeDelta (0, 0)` in the bottom-left corner. The duplicate wiring is how it came back.
+
+Distance cannot double-count, and it rides `ObstacleMovement.SpeedMultiplier`, so it measures what
+actually slides past and quickens with the ramp.
+
+### Guards added
+
+`Awake()` now reports the collision directly, rather than leaving it to look like a rendering
+fault:
+
+```
+GameManager: Score Text Counter and Distance Text Counter are the same object,
+so each overwrites the other.
+```
+
+`scoreTextCounter` was also the only one of the three counters dereferenced without a null check,
+while `coinText` and `distanceTextCounter` both had one. It now goes through `ShowScore()` and is
+guarded in `ShowRunCounters()`, so clearing the slot is a valid way to take the rock count off the
+HUD rather than a crash.
+
+## The counter was flickering because two methods wrote it (2026-10-05)
+
+Reported as the UI text glitching while the fish swam up and down. The cause was neither
+rendering nor alignment: the scene had both GameManager slots pointing at the same component.
+
+```
+scoreTextCounter:    {fileID: 678708312}   <- Distance Score Counter
+distanceTextCounter: {fileID: 678708312}   <- the same component
+```
+
+`ShowDistance()` wrote `Distance Count: 143` five to eight times a second while `AddScore()`
+wrote a bare `7` over it on every rock cleared. The text flipped between the two formats, and
+because clearing rocks is what the fish does while swimming up and down the cave, it looked
+like movement caused it.
+
+Nothing was miswired by accident. `Distance Score Counter` is the only numeric text object in
+the scene: `Text (TMP)` reads "Button", and `CurrentScore_Label`, `ScoreLabel` and
+`BestScore_Label` are inactive headers. There was nothing else for the score to point at.
+
+`Coin Counter` never had this problem because it owns one object with one writer, `ShowCoins()`.
+That is the rule the HUD now follows throughout.
+
+### What changed
+
+The `distanceTextCounter` field is gone and `ShowDistance()` with it. `scoreTextCounter` stays,
+already wired to the same component, and one writer composes the whole line:
+
+```csharp
+scoreTextCounter.text = "Score: " + Score + "    Distance Count: " + Distance;
+```
+
+`AddScore()`, `ResetScore()`, `ResetDistance()` and `Update()` all route through it, so there is
+exactly one `scoreTextCounter.text` assignment in the file. The `if (whole == Distance) return;`
+guard in `Update()` still means the text is only rebuilt when the number actually changes.
+
+Keeping `scoreTextCounter` rather than `distanceTextCounter` was deliberate: both were wired to
+the same object, so either name would have survived, and the one with more call sites meant the
+smaller diff and no Inspector work. The scene's `distanceTextCounter` entry is now an orphan and
+Unity drops it on the next save, like `graceSeconds` and `distancePerSecond` before it.
+
+`scoreTextCounter` is also null-guarded now, in the writer and in `ShowRunCounters()`. It was the
+only one of the three counters that would have thrown on an empty slot.
+
+### The general rule
+
+One text object, one writer. Two Inspector slots that can be filled with the same object are a
+trap, and this scene has few enough text objects that it was the likely outcome rather than a
+careless one. Where a second value needs showing, compose it into the one string.
+
+### Then the score came off it again (2026-10-05)
+
+Showing both read as `Score: 2    Distance Count: 18`, which wrapped onto two lines in the
+1018-wide box, and the rock score duplicated what the coin counter already does. The line is now
+`Distance Count: 18` alone, which fits on one line with room to spare.
+
+`Score` still counts in code, so a high-score screen can use it later, but nothing displays it:
+`AddScore()` no longer touches the text and `ResetScore()` no longer paints. `ShowRunScore()` is
+`ShowDistance()` again, called only from `Update()` and `ResetDistance()` -- the two places the
+distance actually changes.
+
+The field stays `scoreTextCounter` even though it now carries the distance. Renaming it would
+empty the Inspector slot, and this scene has only the one numeric text object to put back in it.
+A comment on the field says so, because the name is otherwise misleading.
+
+## The coin counter joins the run HUD (2026-10-05)
+
+The two counters disagreed about when they existed. `Coin Counter` is saved with
+`m_IsActive: 1` and nothing in code ever toggled it, so it sat on the main menu and the game
+over screen as well as during play. `Distance Score Counter` is saved disabled and only
+`ShowRunCounters()` turned it on, so it appeared with the run.
+
+`ShowRunCounters()` now sets both, with the same `foreach` shape already used for the raycast
+pass in `Awake()`. Both counters come up when PLAY is pressed and go away on the menu.
+
+Game over deliberately leaves them up: `ShowRunCounters(false)` is only called from
+`BackToMenu()`, so the final distance and coin count stay readable on the end screen.
+
+The saved scene states no longer matter either way, since `Start()` runs `BackToMenu()` and that
+settles both counters before anything is shown.
+
 ---
 
 ## Known rough edges
@@ -992,6 +1203,11 @@ Most folders also carry the `CHAT-HANDOFF.md` and `DEVLOG.md` of their moment. T
 
 | Folder | Holds |
 |---|---|
+| `2026-10-05_0213_before-coin-counter-gating/` | `GameManager.cs` — before the coin counter was tied to the run |
+| `2026-10-05_0205_before-distance-only/` | `GameManager.cs` — before the rock score came off the counter line |
+| `2026-10-05_0157_before-counter-flicker-fix/` | `GameManager.cs` — before the two counter slots became one |
+| `2026-10-05_0136_before-raycast-fix/` | `GameManager.cs` — before the HUD counters stopped swallowing taps |
+| `2026-10-05_0115_before-distance-counter/` | `GameManager.cs` — before the distance counter was added |
 | `2026-10-05_0044_before-comment-shorten/` | All 12 scripts — before comments were cut back and the four guard bugs fixed |
 | `2026-10-05_0018_before-remove-get-ready/` | All 12 scripts — before the get-ready state was taken out |
 | `2026-10-04_2359_before-comment-trim/` | All 12 scripts — before a comment and tooltip trim that was never applied |
