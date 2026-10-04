@@ -2,18 +2,22 @@ using UnityEngine;
 
 public class ScoreTrigger : MonoBehaviour
 {
-    // Each gap is worth exactly one point, even if the fish clips the zone twice
+    // One point per gap, even if the fish clips the zone twice
     private bool scored;
 
-    // Runs when something passes through this object's "Is Trigger" collider (the gap between the pipes)
+    // Fires when something passes through the gap's trigger collider
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (scored) return;
 
-        // Only the fish scores. Anything else passing through is ignored.
+        // Only the fish scores
         if (collision.GetComponent<PlayerControllerScript>() == null) return;
 
         scored = true;
-        GameManager.Instance.AddScore();
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AddScore();
+        }
     }
 }
