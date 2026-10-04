@@ -3117,7 +3117,7 @@ MonoBehaviour:
   coinSize: 0.7
   spinDegrees: 25
   driftY: 0.4
-  wallGap: 0
+  wallGap: 0.35
   driftMinSpeed: 0.1
   driftMaxSpeed: 0.32
   rampSeconds: 90
