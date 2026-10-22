@@ -9,11 +9,14 @@ public class PlayerHit : MonoBehaviour
 
     private Camera mainCamera;
 
+    // - Caches the camera once, since the fall check below needs its position every frame.
     private void Awake()
     {
         mainCamera = Camera.main;
     }
 
+    // - Ends the run once the fish has sunk far enough below the camera to be gone for good.
+    // - There is no floor collider, so this is the only thing that catches a fish that fell out.
     private void Update()
     {
         // Frozen on the menu, on pause and after a game over
@@ -30,11 +33,14 @@ public class PlayerHit : MonoBehaviour
         }
     }
 
+    // - Ends the run on contact with anything solid: rocks and debris both arrive here.
     private void OnCollisionEnter2D(Collision2D collision)
     {
         EndRun();
     }
 
+    // - The single exit both the fall and the collision route through, so a run can only end
+    //   one way. GameManager.GameOver guards against being called twice in a frame.
     private void EndRun()
     {
         if (GameManager.Instance == null) return;

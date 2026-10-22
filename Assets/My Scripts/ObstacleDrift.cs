@@ -18,11 +18,13 @@ public class ObstacleDrift : MonoBehaviour
     private float secondsUntilTurn;
 
     // Set by ConfigureCurrent(). A null spawner means this piece stays locked to the cave.
-    private MyObstacleSpawner rockSpawner;
+    private ObstacleSpawner rockSpawner;
     private float currentPush;
     private float pieceRadius;
     private float wallGap;
 
+    // - Sets how far and how fast this piece may wander, then starts it moving.
+    // - Called by the spawner right after the piece is created.
     public void Configure(float allowed, float minSpeed, float maxSpeed)
     {
         allowedDrift = allowed;
@@ -31,7 +33,9 @@ public class ObstacleDrift : MonoBehaviour
         PickVelocity();
     }
 
-    public void ConfigureCurrent(MyObstacleSpawner rocks, float push, float radius, float wallGap = 0f)
+    // - Opts this piece into the current that carries it ahead of the cave.
+    // - Left uncalled, the piece stays locked to the walls and only wanders.
+    public void ConfigureCurrent(ObstacleSpawner rocks, float push, float radius, float wallGap = 0f)
     {
         rockSpawner = rocks;
         currentPush = push;
@@ -39,12 +43,16 @@ public class ObstacleDrift : MonoBehaviour
         this.wallGap = wallGap;
     }
 
+    // - Rolls a new drift speed and direction, plus how long to hold it before rolling again.
+    // - Each piece rolls its own, which is what stops the debris moving as one sheet.
     private void PickVelocity()
     {
         driftVelocity = Random.Range(minDriftSpeed, maxDriftSpeed) * (Random.value < 0.5f ? -1f : 1f);
         secondsUntilTurn = Random.Range(MIN_SECONDS_UNTIL_TURN, MAX_SECONDS_UNTIL_TURN);
     }
 
+    // - Wanders the piece up and down within its allowance, turning back at the limits.
+    // - Applied as a delta so it composes with ObstacleMovement sliding the piece left.
     private void Update()
     {
         secondsUntilTurn -= Time.deltaTime;
@@ -69,6 +77,9 @@ public class ObstacleDrift : MonoBehaviour
         CarryForward();
     }
 
+    // - Pushes the piece ahead of the cave, harder while a swell passes.
+    // - Overtaking the walls would put it somewhere it was never placed for, so the corridor is
+    //   re-measured every frame and the piece held inside it.
     private void CarryForward()
     {
         if (rockSpawner == null || currentPush <= 0f) return;

@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
 
@@ -10,19 +11,35 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private TMP_Text gameOverText;
     [SerializeField] private GameObject player;
-    [SerializeField] private MyObstacleSpawner obstacleSpawner;
+    [SerializeField] private ObstacleSpawner obstacleSpawner;
     [SerializeField] private TMP_Text scoreTextCounter;
+
+    [Header("Game over screen")]
+    [Tooltip("The GameOverMenu panel. Shown on death, hidden by Restart and Home.")]
+    [SerializeField] private GameObject gameOverMenu;
+
+    [Tooltip("This run's distance, written as SCORE: 23m.")]
+    [SerializeField] private TMP_Text gameOverScoreText;
+
+    [Tooltip("The best distance ever reached, written as BEST SCORE: 98m.")]
+    [SerializeField] private TMP_Text gameOverBestText;
+
+    [Tooltip("Coins collected in the run that just ended.")]
+    [SerializeField] private TMP_Text gameOverCoinText;
 
     [Header("Screens")]
     [Tooltip("The home screen. Shown at boot, hidden once Play is pressed.")]
     [SerializeField] private GameObject mainMenu;
 
+    [Tooltip("The fish shop. Opened by CharactersButton, over the same dim the pause screen uses.")]
+    [SerializeField] private GameObject charactersMenu;
+
     [Header("Buttons")]
-    [Tooltip("Restarts the run. Shown on the game over screen and while paused.")]
+    [Tooltip("Restarts the run. The pause screen's copy — the game over panel has its own.")]
     [FormerlySerializedAs("playButton")]
     [SerializeField] private GameObject restartButton;
 
-    [Tooltip("Goes back to the main menu. Sits next to the Restart button.")]
+    [Tooltip("Goes back to the main menu. The pause screen's copy, next to that Restart.")]
     [SerializeField] private GameObject homeButton;
 
     [Tooltip("Pauses the run. Only visible while actually playing.")]
@@ -31,9 +48,29 @@ public class GameManager : MonoBehaviour
     [Tooltip("Resumes a paused run. Only while paused, never on the game over screen.")]
     [SerializeField] private GameObject resumeButton;
 
-    [Tooltip("How dark the screen goes behind the pause buttons. 0 = no dimming.")]
+    // Deliberately NOT [FormerlySerializedAs("pauseDimAlpha")]. The scene had that saved at
+    // 0.6 and a saved value beats a script default, so the rename is what lets 0.78 apply
+    // without editing the scene while Unity holds it open. Tune from the slider after this.
+    [Tooltip("How dark the screen goes behind the pause and game over buttons. 0 = no dimming.")]
     [Range(0f, 1f)]
-    [SerializeField] private float pauseDimAlpha = 0.6f;
+    [SerializeField] private float pauseDimDarkness = 0.78f;
+
+    [Tooltip("How soft the frozen game goes behind the dim. Each step halves the resolution. 0 = sharp.")]
+    [Range(0, 6)]
+    [SerializeField] private int pauseBlurSteps = 4;
+
+    [Header("Sound Button")]
+    [Tooltip("The main menu's sound toggle. Both toggles show the one Muted state.")]
+    [SerializeField] private Image menuSoundButton;
+
+    [Tooltip("The pause screen's sound toggle. Hidden with the other pause buttons during a run.")]
+    [SerializeField] private Image pauseSoundButton;
+
+    [Tooltip("Shown while sound is on.")]
+    [SerializeField] private Sprite soundOnSprite;
+
+    [Tooltip("Shown while sound is muted.")]
+    [SerializeField] private Sprite soundOffSprite;
 
     [Header("Coins")]
     [Tooltip("Shows the coin wallet: a running total that survives runs and sessions.")]
@@ -61,15 +98,39 @@ public class GameManager : MonoBehaviour
     [Min(0.1f)]
     [SerializeField] private float unitsPerSecond = 5f;
 
+    [Header("Cave depth")]
+    // This takes ownership of the light's Intensity: once a run starts, whatever is typed on
+    // the Light 2D itself is overwritten from here. That is the point -- the value has to
+    // change over the run, so it cannot also be authored on the component. Start Light is the
+    // number to tune; the light's own slider only decides what the Editor preview shows.
+    //
+    // There is no surface in this game. The fish lives in the cave and the run only ever goes
+    // further in, so these are "where the run begins" and "as far in as it gets", not a dive
+    // from daylight.
+    [Tooltip("The Global Light 2D. Left empty, the cave simply never darkens.")]
+    [SerializeField] private Light2D caveLight;
+
+    [Tooltip("Light intensity at the mouth of the run, where every run begins.")]
+    [Range(0f, 2f)]
+    [SerializeField] private float startLight = 0.35f;
+
+    [Tooltip("Light intensity once the fish is as deep into the cave as it gets.")]
+    [Range(0f, 2f)]
+    [SerializeField] private float deepLight = 0.08f;
+
+    [Tooltip("Distance in metres at which the cave reaches its darkest.")]
+    [Min(1f)]
+    [SerializeField] private float darkestAtDistance = 400f;
+
     [Header("Player")]
     // Deliberately NOT [FormerlySerializedAs("startMarginFromLeft")]. That field held 1.9 WORLD
     // UNITS; this one holds a FRACTION, so 1.9 would start the fish 1.9 screen-widths across.
-    // The rename is also what lets this default apply over the scene's saved value.
+    // The scene has since saved its own copy, so the default below is documentation only --
+    // changing it moves nothing. Edit the field on GameManager in the Inspector.
     [Tooltip("Where the fish starts, as a fraction of the screen width from the left edge.")]
     [Range(0f, 1f)]
-    [SerializeField] private float startFractionFromLeft = 0.3333f;
+    [SerializeField] private float startFractionFromLeft = 0.5f;
 
-    public int Score { get; private set; }
     public int HighScore { get; private set; }
 
     // Collected this run. The HUD counter shows this, and it clears like the score.
@@ -84,6 +145,63 @@ public class GameManager : MonoBehaviour
 
     private const string COINS_KEY = "Coins";
 
+    // Best distance ever reached. HighScore existed as a property for a long time without
+    // anything ever assigning it; this is what finally gives it a value and a home.
+    private const string BEST_KEY = "BestDistance";
+    private const string MUTE_KEY = "Muted";
+
+    [Header("Sound")]
+    // Renamed from clickClip to match the file. FormerlySerializedAs is what keeps the clip you
+    // already dragged on: without it the rename reads as a new field and comes back empty.
+    [Tooltip("Played by every button in the UI. Assets/Music/buttons click.")]
+    [FormerlySerializedAs("clickClip")]
+    [SerializeField] private AudioClip buttonClick;
+
+    [Tooltip("Played when the fish collects a coin. Assets/Music/fish get coin.")]
+    [SerializeField] private AudioClip coinClip;
+
+    [Tooltip("Played on every swim stroke, the fish rising. Assets/Music/Pop sound.")]
+    [SerializeField] private AudioClip movementPop;
+
+    // PlayOneShot's own volumeScale argument, which is the only per-clip level there is without
+    // an AudioMixer. AudioListener.volume is the global mute and cannot balance one clip against
+    // the rest. This one fires on every stroke, so it sits under the others by default.
+    [Tooltip("How loud the swim pop is, relative to the other sounds.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float movementPopVolume = 0.35f;
+
+    [Tooltip("Played once when the fish dies. Assets/Music/Game Over sound.")]
+    [SerializeField] private AudioClip gameOverClip;
+
+    [Tooltip("Looped under the whole game, menu included. Assets/Music/Bg Music.")]
+    [SerializeField] private AudioClip bgMusic;
+
+    // Read once, at Awake. To find the level, drag the runtime AudioSource's own Volume slider
+    // during Play, then type that number in here in Edit mode.
+    [Tooltip("How loud the music sits under the sound effects.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float bgMusicVolume = 0.3f;
+
+    private AudioSource sfx;
+
+    // Its own source: sfx is a PlayOneShot bus, and one AudioSource cannot be both that and a
+    // clip that loops.
+    private AudioSource music;
+
+    // One flag behind every sound button, so the menus cannot disagree
+    public bool Muted { get; private set; }
+
+    // Read by PlayerController, which idles the fish here and nowhere else. Pause and game over
+    // freeze the game too, so "timeScale is 0" is not the same question as "are we on the menu".
+    // Derived from the object the three screens already toggle, rather than a second flag to
+    // keep in step with them.
+    public bool OnMenu => mainMenu != null && mainMenu.activeSelf;
+
+    // How far into the cave the run is, 0 at the mouth and 1 at its darkest. Published so the
+    // fish's lure can brighten against the dimming cave off the same number, rather than a
+    // second copy of the distance maths that could drift out of step with this one.
+    public float CaveDepth { get; private set; }
+
     private bool isPaused;
     private bool isGameOver;
 
@@ -91,9 +209,11 @@ public class GameManager : MonoBehaviour
     private TrashSpawner trashSpawner;
     private CoinSpawner coinSpawner;
 
-    // Full-screen dim behind the pause buttons, built on first pause so there is no slot to wire
-    private GameObject pauseDim;
+    // Built on first pause, so there is still no slot to wire. Owns the render textures.
+    private PauseBlur pauseBlur;
 
+    // - Brings the game up: claims the singleton, finds the spawners, loads the save, builds
+    //   the sound and the coin icon.
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -129,16 +249,24 @@ public class GameManager : MonoBehaviour
         }
 
         TotalCoins = PlayerPrefs.GetInt(COINS_KEY, 0);
-        BuildCoinIcon();
+        HighScore = PlayerPrefs.GetInt(BEST_KEY, 0);
+        Muted = PlayerPrefs.GetInt(MUTE_KEY, 0) == 1;
+        BuildSound();
+        ApplySound();
+        BuildCoinIcon(coinText, coinIconSize);
         ShowCoins();
     }
 
+    // - Opens on the menu, which freezes the fish, the background and the obstacles at once.
     private void Start()
     {
         // timeScale 0 in here freezes the fish, the background and the obstacles at once
         BackToMenu();
     }
 
+    // - Advances the distance counter and darkens the cave with it.
+    // - deltaTime is 0 whenever timeScale is, so the menu, pause and game over all stop the
+    //   counter without needing a flag of their own.
     private void Update()
     {
         // Time.deltaTime is 0 whenever timeScale is, so the menu, pause and game over all
@@ -150,14 +278,22 @@ public class GameManager : MonoBehaviour
 
         Distance = whole;
         ShowDistance();
+        ApplyCaveDepth();
     }
 
+    // - Ends the run: freezes time, stops the spawners, banks a new best and shows the panel.
+    // - Guarded against running twice, since the fish can touch two things in one frame.
     public void GameOver()
     {
         // The fish can touch two things in one frame, so only the first hit counts
         if (isGameOver) return;
 
         isGameOver = true;
+
+        // Behind the isGameOver guard above, so touching two things on one frame still plays it
+        // once. timeScale goes to 0 just below; PlayOneShot is not scaled by it.
+        if (sfx != null && gameOverClip != null) sfx.PlayOneShot(gameOverClip);
+
         isPaused = false;
         Time.timeScale = 0f;
 
@@ -165,18 +301,35 @@ public class GameManager : MonoBehaviour
         if (trashSpawner != null) trashSpawner.StopSpawning();
         if (coinSpawner != null) coinSpawner.StopSpawning();
 
+        if (Distance > HighScore)
+        {
+            HighScore = Distance;
+            PlayerPrefs.SetInt(BEST_KEY, HighScore);
+        }
+
         // SetInt only writes to memory, and a phone can be killed without a clean quit
         PlayerPrefs.Save();
 
+        ShowGameOver();
         gameOverText.gameObject.SetActive(true);
-        ShowRunButtons(true);
+        if (gameOverMenu != null) gameOverMenu.SetActive(true);
+
+        // The panel carries its own Restart and Home, composed to sit with the score rows, so
+        // the pause pair stays down and the two screens can be positioned independently. The
+        // dim is still wanted behind the panel, which is why it is raised on its own here.
+        ShowRunButtons(false);
+        ShowPauseDim(true);
     }
 
     // Called by the Play button on the menu and the Restart button
+    // - Starts a run from the menu or a restart: clears the last one, resets the counters and
+    //   opens the spawners.
+    // - Resetting the player here is also what applies the skin picked in the shop.
     public void StartGame()
     {
         mainMenu.SetActive(false);
         gameOverText.gameObject.SetActive(false);
+        if (gameOverMenu != null) gameOverMenu.SetActive(false);
         ShowRunButtons(false);
 
         isPaused = false;
@@ -185,11 +338,10 @@ public class GameManager : MonoBehaviour
 
         pauseButton.SetActive(true);
 
-        player.GetComponent<PlayerControllerScript>().ResetPlayer(PlayerStart());
+        player.GetComponent<PlayerController>().ResetPlayer(PlayerStart());
         ClearObstacles();
 
         // Every run starts from zero
-        ResetScore();
         ResetCoins();
         ResetDistance();
         ShowRunCounters(true);
@@ -199,11 +351,19 @@ public class GameManager : MonoBehaviour
         obstacleSpawner.StartSpawning();
         if (trashSpawner != null) trashSpawner.StartSpawning();
         if (coinSpawner != null) coinSpawner.StartSpawning();
+
+        // Only if it is not already going: Restart comes back through here, and Play() on a
+        // running source snaps the track back to its first bar, so a retry loop would never
+        // hear past the opening seconds.
+        if (music != null && bgMusic != null && !music.isPlaying) music.Play();
     }
 
     // Called by the Pause button to pause, and by the Resume button to continue. Pause stays
     // on screen but sits under the dim, so its taps are swallowed: on a phone the two were
     // close enough that tapping Pause again to resume was easy to do by accident.
+    // - Freezes or resumes the run behind the pause panel.
+    // - Pause stays on screen but under the dim, so its taps are swallowed: on a phone the two
+    //   buttons are close enough that resuming by accident was easy.
     public void TogglePause()
     {
         // Nothing to pause once the run is over
@@ -216,17 +376,24 @@ public class GameManager : MonoBehaviour
     }
 
     // Called by the Home button, and once when the game first loads
+    // - Returns to the menu: stops the spawners, clears the cave, saves, and freezes time.
+    // - Also the first thing Start calls, so the menu state is defined in exactly one place.
     public void BackToMenu()
     {
         obstacleSpawner.StopSpawning();
         if (trashSpawner != null) trashSpawner.StopSpawning();
         if (coinSpawner != null) coinSpawner.StopSpawning();
+
+        // The menu is the only place the music is off. Pause and game over keep it, so a
+        // retry carries straight on. Guarded because Start() calls BackToMenu(), and a
+        // duplicate GameManager returns out of Awake() before BuildSound() has run.
+        if (music != null) music.Stop();
+
         PlayerPrefs.Save();
         ClearObstacles();
 
         isPaused = false;
         isGameOver = false;
-        ResetScore();
         ResetCoins();
         ResetDistance();
 
@@ -234,10 +401,11 @@ public class GameManager : MonoBehaviour
         ShowRunCounters(false);
 
         gameOverText.gameObject.SetActive(false);
+        if (gameOverMenu != null) gameOverMenu.SetActive(false);
         pauseButton.SetActive(false);
         ShowRunButtons(false);
 
-        player.GetComponent<PlayerControllerScript>().ResetPlayer(PlayerStart());
+        player.GetComponent<PlayerController>().ResetPlayer(PlayerStart());
 
         mainMenu.SetActive(true);
         Time.timeScale = 0f;
@@ -246,16 +414,19 @@ public class GameManager : MonoBehaviour
     // Measured as a share of the screen, so it lands in the same place on any device: a fixed
     // 1.9 units is 10.7% across at 16:9 but only 8.8% on a 19.5:9 phone. Height is locked at
     // 10 units and width follows the aspect.
+    // - Where the fish begins a run, measured as a share of the screen width.
+    // - A share rather than a fixed distance, so it lands in the same visual spot on any phone.
     private Vector3 PlayerStart()
     {
-        Camera cam = Camera.main;
-        float halfWidth = cam.orthographicSize * cam.aspect;
-        float leftEdge = cam.transform.position.x - halfWidth;
-        return new Vector3(leftEdge + halfWidth * 2f * startFractionFromLeft, 0f, 0f);
+        float screenWidth = CameraEdges.HalfWidth * 2f;
+        return new Vector3(CameraEdges.Left + screenWidth * startFractionFromLeft, 0f, 0f);
     }
 
-    // Restart and Home appear together, on game over and on pause. Resume joins them only
-    // while paused, since TogglePause() refuses once the game is over.
+    // The pause screen's three buttons. Game over no longer comes through here: its panel
+    // holds its own Restart and Home so the two layouts can be composed separately.
+    // - Raises or hides the pause panel and everything that belongs to it.
+    // - Game over does not come through here: its panel carries its own buttons so the two
+    //   layouts can be composed separately.
     private void ShowRunButtons(bool visible, bool canResume = false)
     {
         restartButton.SetActive(visible);
@@ -267,43 +438,174 @@ public class GameManager : MonoBehaviour
             resumeButton.SetActive(visible && canResume);
         }
 
+        // Shares this group and is wanted on exactly the same screens, so it is toggled with the
+        // rest: the sound button belongs to the menu and the pause, never to a run in progress.
+        if (pauseSoundButton != null)
+        {
+            pauseSoundButton.gameObject.SetActive(visible);
+        }
+
         ShowPauseDim(visible);
     }
 
-    // Darkens the frozen game behind the buttons and swallows taps aimed at it
+    // The dim and blur live in PauseBlur; this decides only what has to stay readable on top
+    // of them. The panel goes up before the GAME OVER text, or its background would cover it
+    // whenever that text is left as a sibling rather than nested inside the panel.
+    // - Puts the dim and the blurred snapshot up, and lifts the panel above them.
+    // - Order matters: the panel goes up before the GAME OVER text, or its background covers it.
     private void ShowPauseDim(bool visible)
     {
-        if (pauseDim == null)
+        if (pauseBlur == null)
         {
             if (!visible) return;
 
-            pauseDim = new GameObject("PauseDim", typeof(RectTransform), typeof(Image));
-            pauseDim.transform.SetParent(pauseButton.transform.parent, false);
-
-            // Stretch to fill the Canvas whatever shape the device is
-            RectTransform rect = pauseDim.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-
-            // A Graphic is a raycast target by default, which is what blocks the taps
-            pauseDim.GetComponent<Image>().color = new Color(0f, 0f, 0f, pauseDimAlpha);
+            pauseBlur = new PauseBlur(CanvasRoot(), pauseDimDarkness, pauseBlurSteps);
         }
 
-        pauseDim.SetActive(visible);
-
-        if (!visible) return;
-
-        // UI draws in sibling order: the dim above the run, these above the dim. Anything not
-        // raised here stays under it, which is how Pause and the score end up untappable.
-        pauseDim.transform.SetAsLastSibling();
-        gameOverText.transform.SetAsLastSibling();
-        restartButton.transform.SetAsLastSibling();
-        homeButton.transform.SetAsLastSibling();
-        if (resumeButton != null) resumeButton.transform.SetAsLastSibling();
+        pauseBlur.Show(visible, gameOverMenu, gameOverText.gameObject, restartButton, homeButton,
+                       resumeButton);
     }
 
+    // One AudioSource for every effect, added at runtime rather than sat in the scene, so no
+    // component had to be added to GameManager by hand. Muting needs no part in this:
+    // ApplySound() drops AudioListener.volume, which silences every source at once.
+    //
+    // PlayOneShot is not scaled by Time.timeScale, so the menu and the pause screen still click.
+    // - Creates the one AudioSource every effect plays through and subscribes every button to
+    //   the click sound.
+    // - Added at runtime, so no component had to be put on this object by hand.
+    private void BuildSound()
+    {
+        sfx = gameObject.AddComponent<AudioSource>();
+        sfx.playOnAwake = false;
+
+        // Added at runtime for the same reason sfx is: nothing to put in the scene by hand.
+        // Muting needs no part here either -- ApplySound() runs on the next line of Awake and
+        // AudioListener.volume is upstream of every source, this one included.
+        music = gameObject.AddComponent<AudioSource>();
+        music.clip = bgMusic;
+        music.loop = true;
+        music.volume = bgMusicVolume;
+        music.playOnAwake = false;
+
+        // These are new serialized fields on a component the scene already had saved, so they
+        // come back EMPTY however they are declared. The game runs silent until they are dragged
+        // on; this says so out loud rather than leaving it to be noticed.
+        if (buttonClick == null || coinClip == null || movementPop == null
+            || gameOverClip == null || bgMusic == null)
+        {
+            Debug.LogWarning("GameManager: Button Click, Coin Clip, Movement Pop, Game Over Clip "
+                             + "and/or Bg Music is empty. "
+                             + "Drag the files from Assets/Music onto GameManager in the Inspector, "
+                             + "in Edit mode -- a Play-mode drag is discarded when Play stops.", this);
+        }
+
+        // Pulled into memory now rather than on first play. Without this the very first time each
+        // clip sounds, playback waits on the load -- which is the delay that reads as "the sound
+        // is late". Does in code what the importer's Preload Audio Data does, so it holds whether
+        // or not that box is ticked on four separate assets.
+        // Preloaded here but NOT started: BuildSound runs at Awake, and the main menu is
+        // what is on screen then. StartGame() starts it, on a clip already in memory.
+        PreloadClips(buttonClick, coinClip, movementPop, gameOverClip, bgMusic);
+
+        // Every button under the Canvas, the inactive ones included -- the shop's shelf is
+        // switched off at load, and its six badges are buttons. Done here rather than per button
+        // in the Inspector, for the same reason the counters have their raycast cleared above:
+        // a button added later is covered without anyone remembering to wire it.
+        //
+        // On pointer DOWN, not onClick. onClick fires on release, so the click was arriving a
+        // whole press-and-lift after the finger landed. The sound belongs to the press.
+        foreach (Button button in CanvasRoot().GetComponentsInChildren<Button>(true))
+        {
+            if (button.GetComponent<ButtonPressSound>() == null)
+            {
+                button.gameObject.AddComponent<ButtonPressSound>();
+            }
+        }
+    }
+
+    // - Forces each clip to finish loading before play, so the first use does not hitch.
+    private void PreloadClips(params AudioClip[] clips)
+    {
+        foreach (AudioClip clip in clips)
+        {
+            if (clip != null) clip.LoadAudioData();
+        }
+    }
+
+    // Public so a button wired straight to it in the Inspector also works, and so
+    // ButtonPressSound can reach it
+    // - Plays the UI click. Public so a button wired straight to it in the Inspector works too.
+    public void PlayClick()
+    {
+        if (sfx != null && buttonClick != null) sfx.PlayOneShot(buttonClick);
+    }
+
+    // Called from PlayerController the frame it swims, which is the one place the stroke happens
+    // - Plays the little pop the fish makes on a swim.
+    public void PlayMovementPop()
+    {
+        if (sfx != null && movementPop != null) sfx.PlayOneShot(movementPop, movementPopVolume);
+    }
+
+    // Called by the sound button on every menu that carries one. There is a single Muted flag
+    // behind all of them, which is what keeps the menus agreeing, and it is in PlayerPrefs so
+    // the choice survives the app being killed.
+    // - Flips mute and saves it, from whichever menu's sound button was tapped.
+    // - One flag behind all of them is what keeps the menus agreeing.
+    public void ToggleSound()
+    {
+        Muted = !Muted;
+        PlayerPrefs.SetInt(MUTE_KEY, Muted ? 1 : 0);
+
+        // SetInt only writes to memory, and a phone can be killed without a clean quit
+        PlayerPrefs.Save();
+
+        ApplySound();
+    }
+
+    // AudioListener.volume is the one global tap: it silences every AudioSource at once,
+    // including any added later. The game has no audio at all yet, so this currently mutes
+    // nothing -- which is the point. Sounds added later are muted by it without being wired
+    // to anything, and no AudioMixer has to exist for that to hold.
+    // - Applies mute and swaps every sound button's icon to match.
+    // - AudioListener.volume is the one global tap: it silences every source at once, including
+    //   any added later, with no AudioMixer needed.
+    private void ApplySound()
+    {
+        AudioListener.volume = Muted ? 0f : 1f;
+
+        Sprite icon = Muted ? soundOffSprite : soundOnSprite;
+        if (icon == null) return;
+
+        // Both are set, not just the visible one: a hidden menu's button still has to be
+        // right by the time that menu is shown
+        if (menuSoundButton != null) menuSoundButton.sprite = icon;
+        if (pauseSoundButton != null) pauseSoundButton.sprite = icon;
+    }
+
+    // The Canvas this UI lives on, found by walking up rather than being wired, so regrouping
+    // the hierarchy cannot break it.
+    // - The Canvas this UI lives on, found by walking up rather than wired.
+    // - Regrouping the hierarchy therefore cannot break it.
+    private Transform CanvasRoot()
+    {
+        Canvas canvas = pauseButton.GetComponentInParent<Canvas>();
+        return canvas != null ? canvas.transform : pauseButton.transform.parent;
+    }
+
+    // PauseBlur holds a RenderTexture, which is native memory and is not collected with the
+    // object that held it
+    // - Releases the blur's RenderTexture, which is native memory and is not collected with
+    //   the object that held it.
+    private void OnDestroy()
+    {
+        if (pauseBlur != null) pauseBlur.Release();
+    }
+
+    // - Deletes every rock, coin and piece of debris still in the cave.
+    // - They all carry ObstacleMovement and all parent to the spawner, which is what lets one
+    //   sweep find the lot.
     private void ClearObstacles()
     {
         // Obstacles are children of the spawner, so delete every one of them
@@ -313,15 +615,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void AddScore()
-    {
-        // A gap can be cleared in the same frame the fish dies, so ignore late points
-        if (isGameOver) return;
-
-        Score++;
-    }
-
     // Called by CoinPickup when the fish swims into a coin
+    // - Banks one collected coin into both the run total and the saved wallet.
+    // - Every coin routes through here, so the game over guard means a coin touched on the
+    //   fatal frame stays silent.
     public void AddCoin()
     {
         if (isGameOver) return;
@@ -330,17 +627,80 @@ public class GameManager : MonoBehaviour
         TotalCoins++;
         PlayerPrefs.SetInt(COINS_KEY, TotalCoins);
         ShowCoins();
+
+        // Here rather than in CoinPickup: every collected coin routes through this one method,
+        // including the isGameOver guard above, so a coin touched on the fatal frame stays silent.
+        if (sfx != null && coinClip != null) sfx.PlayOneShot(coinClip);
     }
 
+    // The only way coins leave the wallet, sitting next to the only way they enter it. Checking
+    // the balance and then subtracting it are one step on purpose: as two, every caller has to
+    // remember to do both, and the one that forgets hands out a fish for free.
+    //
+    // Returns false and spends NOTHING when the player cannot afford it. A partial spend here is
+    // real money to the player, so the early return happens before anything is written.
+    // - Spends from the wallet if there is enough, and reports whether it happened.
+    // - Checks and subtracts in one step, so there is no window where a fish is granted and
+    //   the coins are not taken.
+    public bool TrySpendCoins(int amount)
+    {
+        if (amount <= 0 || TotalCoins < amount) return false;
+
+        TotalCoins -= amount;
+        PlayerPrefs.SetInt(COINS_KEY, TotalCoins);
+
+        // SetInt only writes to memory, and a phone can be killed without a clean quit. A lost
+        // purchase is worse than a lost point, so this one is flushed immediately.
+        PlayerPrefs.Save();
+
+        ShowCoins();
+        return true;
+    }
+
+    // Called by CharactersButton to open the shop, and by its close button to leave. Reuses the
+    // pause screen's dim and blur rather than building a second one -- the backdrop is meant to
+    // look identical, and PauseBlur already takes whatever should sit above it.
+    // - Opens or closes the fish shop over the menu.
+    // - Re-applies the skin on the way through: closing the shop goes through neither StartGame
+    //   nor BackToMenu, so the menu fish would otherwise keep the old one.
+    public void ShowCharacters(bool visible)
+    {
+        if (charactersMenu == null) return;
+
+        charactersMenu.SetActive(visible);
+        mainMenu.SetActive(!visible);
+
+        // Closing the shop goes through neither StartGame nor BackToMenu, so without this the
+        // menu fish keeps the old skin until the next run. Called on open too: one line beats a
+        // branch, and re-applying the skin the fish already wears costs a sprite assignment.
+        player.GetComponent<PlayerController>().ApplySkin();
+
+        if (pauseBlur == null)
+        {
+            if (!visible) return;
+
+            pauseBlur = new PauseBlur(CanvasRoot(), pauseDimDarkness, pauseBlurSteps);
+        }
+
+        pauseBlur.Show(visible, charactersMenu);
+    }
+
+    // - Puts the distance counter back to zero and redraws it.
     private void ResetDistance()
     {
         distanceTravelled = 0f;
         Distance = 0;
         ShowDistance();
+
+        // Back to the mouth of the run. StartGame() and BackToMenu() both come through here,
+        // so a new run and the menu are lit the same as the last run's first metre.
+        ApplyCaveDepth();
     }
 
     // The only place this counter's text is written. Two writers on one TMP_Text is what
     // made it flicker. Tolerates an empty slot, like the coin counter.
+    // - The only place the distance text is written.
+    // - Two writers on one TMP_Text is what made it flicker.
     private void ShowDistance()
     {
         if (scoreTextCounter == null) return;
@@ -348,34 +708,79 @@ public class GameManager : MonoBehaviour
         scoreTextCounter.text = "Distance: " + Distance;
     }
 
+    // The cave closes in the deeper the run gets. Called beside ShowDistance() rather than
+    // from inside it, so the text writer stays the only thing that writes the text -- the
+    // rule that came out of the counter flicker.
+    //
+    // Driven off the whole-metre Distance, so it only recomputes when the counter ticks
+    // rather than every frame. 400 steps across the fade is far finer than the eye reads.
+    // - Works out how deep the run is and dims the cave light to match.
+    // - Published as CaveDepth so the lure can rise with it off the same number.
+    private void ApplyCaveDepth()
+    {
+        // Min(1) on the field stops a divide by zero here, and Clamp01 means anything past
+        // darkestAtDistance simply stays at deepLight instead of overshooting into black.
+        // Set before the null check, so the lure still tracks depth with no light wired.
+        CaveDepth = Mathf.Clamp01(Distance / darkestAtDistance);
+
+        if (caveLight == null) return;
+
+        caveLight.intensity = Mathf.Lerp(startLight, deepLight, CaveDepth);
+    }
+
+    // Fills the game over panel. One writer per text, like ShowDistance() and ShowCoins():
+    // two methods writing one TMP_Text is what made the HUD counter flicker.
+    // Tolerates empty slots, so a half-composed panel still runs.
+    // - Puts up the game over text and panel, and raises the dim behind them.
+    private void ShowGameOver()
+    {
+        if (gameOverScoreText != null) gameOverScoreText.text = "SCORE: " + Distance + "m";
+        if (gameOverBestText != null) gameOverBestText.text = "BEST SCORE: " + HighScore + "m";
+
+        // This run's haul, not the lifetime wallet. TotalCoins if you want the wallet instead.
+        if (gameOverCoinText != null) gameOverCoinText.text = Coins.ToString();
+    }
+
     // Only the run count clears. TotalCoins is the wallet and keeps climbing.
+    // - Clears this run's coin count. The saved wallet is untouched.
     private void ResetCoins()
     {
         Coins = 0;
         ShowCoins();
     }
 
+    // - The only place the coin counters are written.
+    // - Writes TotalCoins, the saved wallet, not Coins, which resets every run: using the
+    //   wrong one is why the balance never looked cumulative.
     private void ShowCoins()
     {
+        // The wallet, not this run's haul: the player is saving towards a 300 skin, and a counter
+        // that restarts at 0 every run can never show them getting there.
         // Tolerates an empty slot until the counter has been made and dragged in
         if (coinText != null)
         {
-            coinText.text = ": " + Coins;
+            coinText.text = TotalCoins.ToString();
         }
     }
 
-    // Draws the coin art left of the counter, so the number reads as coins rather than a second
+    // Draws the coin art left of a counter, so the number reads as coins rather than a second
     // score. Parented to the counter, so it follows wherever the counter is placed. The sprite
     // comes from the spawner's coin prefab, so the two can never disagree.
-    private void BuildCoinIcon()
+    //
+    // Takes the target because the shop's wallet wants the same treatment in a smaller box, and
+    // one copy of this is better than two that drift apart.
+    // - Puts a coin sprite inside a text counter and reserves room for it.
+    // - Pinned to the box's left edge with a left margin, so the label must stay left-aligned
+    //   or the icon and the digits drift apart.
+    public void BuildCoinIcon(TMP_Text target, float size)
     {
-        if (coinText == null || coinSpawner == null) return;
+        if (target == null || coinSpawner == null) return;
 
         Sprite sprite = coinSpawner.CoinSprite;
         if (sprite == null) return;
 
         GameObject icon = new GameObject("CoinIcon", typeof(RectTransform), typeof(Image));
-        icon.transform.SetParent(coinText.transform, false);
+        icon.transform.SetParent(target.transform, false);
 
         // Anchored inside the counter's left edge, left-hand pivot, so it cannot end up off
         // the canvas the way a right-hand pivot outside the box did
@@ -383,11 +788,15 @@ public class GameManager : MonoBehaviour
         rect.anchorMin = new Vector2(0f, 0.5f);
         rect.anchorMax = new Vector2(0f, 0.5f);
         rect.pivot = new Vector2(0f, 0.5f);
-        rect.sizeDelta = new Vector2(coinIconSize, coinIconSize);
+        rect.sizeDelta = new Vector2(size, size);
         rect.anchoredPosition = new Vector2(coinIconInset, 0f);
 
         // Reserve the icon's strip so the number is laid out clear of it, inside the same box
-        coinText.margin = new Vector4(coinIconInset + coinIconSize + coinIconTextGap, 0f, 0f, 0f);
+        target.margin = new Vector4(coinIconInset + size + coinIconTextGap, 0f, 0f, 0f);
+
+        // The icon is centred in the box (pivot 0.5 above), so the number has to be too or it
+        // rides above the coin. The scene had this text saved as top-aligned.
+        target.verticalAlignment = VerticalAlignmentOptions.Middle;
 
         Image image = icon.GetComponent<Image>();
         image.sprite = sprite;
@@ -397,10 +806,25 @@ public class GameManager : MonoBehaviour
         image.raycastTarget = false;
     }
 
+    // The shop's wallet and the run counter show the same number. Showing it at two sizes reads
+    // as two different things, which is what 73.6/78 against 80/50 looked like. Both sizes come
+    // from the run counter here, so tuning the HUD moves the shop with it.
+    // - Builds the shop's wallet label with the same coin icon as the run counter.
+    // - One builder rather than a second copy that could drift out of step.
+    public void BuildWalletCounter(TMP_Text target)
+    {
+        if (target == null) return;
+
+        if (coinText != null) target.fontSize = coinText.fontSize;
+        BuildCoinIcon(target, coinIconSize);
+    }
+
     // Both counters sit on the Canvas next to the menu, so nothing shows them unless we do.
     // The distance counter is saved disabled in the scene and the coin counter saved enabled,
     // so this is what gets them agreeing: both come on with the run and go with the menu.
     // Game over leaves them up on purpose, so the final numbers can be read.
+    // - Shows or hides the coin and distance counters together.
+    // - The scene saves one enabled and one disabled, so this is what gets them agreeing.
     private void ShowRunCounters(bool visible)
     {
         foreach (TMP_Text counter in new[] { scoreTextCounter, coinText })
@@ -409,8 +833,4 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void ResetScore()
-    {
-        Score = 0;
-    }
 }

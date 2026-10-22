@@ -4,8 +4,8 @@ using UnityEngine;
 // Drops coins into the cave's opening for the fish to collect. Deliberately has no speed
 // ramp of its own: coins carry ObstacleMovement and ride the shared SpeedMultiplier that
 // TrashSpawner drives, so two scripts never fight over one static. Only the spawn rate
-// ramps here. Lives on MyObstacleSpawner's GameObject, so ClearObstacles() sweeps coins too.
-[RequireComponent(typeof(MyObstacleSpawner))]
+// ramps here. Lives on ObstacleSpawner's GameObject, so ClearObstacles() sweeps coins too.
+[RequireComponent(typeof(ObstacleSpawner))]
 public class CoinSpawner : MonoBehaviour
 {
     [Header("Coin")]
@@ -57,20 +57,28 @@ public class CoinSpawner : MonoBehaviour
         }
     }
 
-    private readonly List<GameObject> liveCoinsList = new List<GameObject>();
-    private MyObstacleSpawner rockSpawner;
+    // Spawned this far past the right edge so a coin is never seen appearing
+    private const float SPAWN_MARGIN = 1f;
+
+    private readonly List<GameObject> liveCoins = new List<GameObject>();
+    private ObstacleSpawner rockSpawner;
     private float elapsed;
     private float nextSpawn;
     private bool spawning;
 
+    // - Finds the rock spawner on this same object, which is the only thing that knows where
+    //   the gap between the walls is.
     private void Awake()
     {
-        rockSpawner = GetComponent<MyObstacleSpawner>();
+        rockSpawner = GetComponent<ObstacleSpawner>();
     }
 
+    // - Opens the coin tap for a new run, clearing anything left over from the last one.
+    // - Refuses if the coin prefab is unusable, so the run continues without coins rather than
+    //   throwing once a frame.
     public void StartSpawning()
     {
-        liveCoinsList.Clear();
+        liveCoins.Clear();
         elapsed = 0f;
         nextSpawn = startInterval;
 
@@ -79,11 +87,15 @@ public class CoinSpawner : MonoBehaviour
         spawning = true;
     }
 
+    // - Closes the tap. Coins already in the cave are swept by GameManager.ClearObstacles.
     public void StopSpawning()
     {
         spawning = false;
     }
 
+    // - Counts down to the next coin and drops one when due, with the gap between drops
+    //   tightening as the run goes on.
+    // - Holds off entirely while the screen is already at its coin limit.
     private void Update()
     {
         if (!spawning) return;
@@ -91,7 +103,7 @@ public class CoinSpawner : MonoBehaviour
         elapsed += Time.deltaTime;
 
         // Collected and despawned coins leave nulls behind
-        liveCoinsList.RemoveAll(coin => coin == null);
+        liveCoins.RemoveAll(coin => coin == null);
 
         if (elapsed < nextSpawn) return;
 
@@ -99,11 +111,14 @@ public class CoinSpawner : MonoBehaviour
         float progress = rampSeconds > 0f ? Mathf.Clamp01(elapsed / rampSeconds) : 1f;
         nextSpawn = elapsed + Mathf.Lerp(startInterval, minInterval, progress);
 
-        if (liveCoinsList.Count >= maxOnScreen) return;
+        if (liveCoins.Count >= maxOnScreen) return;
 
         SpawnCoin();
     }
 
+    // - Places one coin just past the right edge, inside the clear corridor between the walls.
+    // - Gives up silently if the rocks have not reached that far yet, or the gap is too tight for
+    //   the coin plus the room it needs to drift.
     private void SpawnCoin()
     {
         Vector2 spriteSize = coinPrefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
@@ -115,7 +130,7 @@ public class CoinSpawner : MonoBehaviour
         // Its own reach, however far it may wander, plus the gap that should still show
         float clearance = radius + driftY + wallGap;
 
-        float x = CameraRightEdge() + 1f;
+        float x = CameraEdges.Right + SPAWN_MARGIN;
         if (!rockSpawner.TryGetGapAt(x, out float low, out float high)) return;
         if (high - low < clearance * 2f) return;
 
@@ -137,9 +152,12 @@ public class CoinSpawner : MonoBehaviour
         drift.ConfigureCurrent(rockSpawner, coinCurrentPush, radius, wallGap);
         coin.AddComponent<CoinPickup>();
 
-        liveCoinsList.Add(coin);
+        liveCoins.Add(coin);
     }
 
+    // - Checks the coin prefab can actually be spawned before the run starts.
+    // - The sprite is checked too, because SpawnCoin reads sprite.bounds and would otherwise
+    //   throw on the first drop instead of reporting a clear error here.
     private bool HasValidCoin()
     {
         if (coinPrefab == null)
@@ -160,9 +178,4 @@ public class CoinSpawner : MonoBehaviour
         return true;
     }
 
-    private float CameraRightEdge()
-    {
-        Camera cam = Camera.main;
-        return cam.transform.position.x + cam.orthographicSize * cam.aspect;
-    }
 }

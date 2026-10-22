@@ -1,35 +1,51 @@
 # Flapper Fish Game.2 — handoff for a new chat
 
-Paste this whole file into a new chat to bring it up to speed. Written 2026-10-04.
-`DEVLOG.md` holds the detail behind every decision below; this file is the short version.
+Paste this whole file into a new chat to bring it up to speed. Written 2026-10-04,
+**status section rewritten 2026-10-09**. `DEVLOG.md` holds the detail behind every decision; this
+file is the short version. Sections below the status are older — trust DEVLOG where they disagree.
 
 ---
 
 ## Where things stand right now
 
-**The game is well ahead of the last build that anyone tested.** An Android APK went out on
-2026-09-24, its bug reports were worked through and closed, and a great deal has been added since.
-**Nothing from 2026-09-25 onward has run on a phone.** That is the single biggest open risk, and
-the next build is where it gets settled.
+**Nothing since the 2026-09-24 Android APK has run on a phone.** That is still the single biggest
+open risk, and two weeks of work now sit behind it.
 
-Closed since that APK: all seven phone-test bugs; coins end to end; ocean currents; the fish being
-shoved by them; a get-ready state; fitted trash colliders; and a clean-code naming pass.
+Added since that build: coins end to end; ocean currents and the fish being shoved by them; fitted
+trash colliders; a clean-code naming pass; a distance counter; a **game over panel** with its own
+Restart and Home; the Canvas **grouped into HUD / MainMenu / GameOverMenu / Pause Buttons**; a
+**pause blur**; a **sound toggle**; and a **depth-based cave darkening** with a lure light on the
+fish.
 
 ### Do these first
 
-1. **`SpawnObstacles` -> Coin Spawner -> `Wall Gap` is 0, and should be 0.35.** It is the only
-   stale Inspector value left. At 0 the corridor clamp lets a coin sit flush against a rock face,
-   which reads as stuck in the wall and is awkward to reach. Unity wrote `default(float)` rather
-   than the C# initializer when the field was added, which is why it is 0.
-2. **Confirm the Console is clean.** The last change fixed two `CS1717` self-assignments, and
-   that compile has not been eyeballed yet.
-3. **Then build an APK and test on the phone.** Everything listed above is unverified on a device.
+1. **Build an APK and test on the phone.** Everything above is unverified on a device, and the
+   lighting work especially: 0.16 global intensity on a desktop monitor in a dark room is not
+   0.16 on a handset outdoors.
+2. **Check the Console on first open.** The scene was last edited on disk with Unity closed, and
+   the lure script was renamed twice and is back to `SpotLight2D.cs` (its `.meta` travelled with it
+   both times, so the GUID and
+   the scene reference should both be intact — but confirm the component is not "missing script").
+3. **Play past 90 seconds.** That is where obstacles hit full speed, 8 u/s, and the question is
+   whether rocks are still readable. If a death feels unfair, raise `Deep Light` — not the lure.
 
 ### Known good, verified in play
 
-Cave walls are seamless past 40 points. The fish migration through the naming pass kept every
-tuned value (`swimForce` 5, `rotationSpeed` 10, `maxTiltUp` 5, `maxTiltDown` -60) and both prefab
-arrays, confirmed in the saved scene. Drift speeds are set to 0.1 / 0.32 on both spawners.
+Cave walls are seamless past 40 points. `swimForce` 5, `rotationSpeed` 10, `maxTiltUp` 5,
+`maxTiltDown` -60. Drift speeds 0.1 / 0.32 on both spawners. `CoinSpawner.wallGap` is **0.35** —
+the long-standing stale 0 is fixed.
+
+### The lighting model, since it is new and has two owners
+
+- `Global Light 2D` is driven **from code**. `GameManager.ApplyCaveDepth()` lerps it from
+  `startLight` 0.3 to `deepLight` 0.16 across `darkestAtDistance` 700 m. Tuning the Light 2D's own
+  Intensity slider does nothing at runtime; tune `Start Light` instead.
+- The fish's `Spot Light 2D` is the lure, driven by `SpotLight2D`. It rests between
+  `baseIntensity` 0.5 and `baseWhenDeep` 1.4 by the same depth, and flares `pulseBoost` on each
+  swim. The flare is **clamped to one boost** so mashing the screen cannot wash the cave out.
+- Background sprites carry a **0.45 grey tint**. Darkening the backdrop rather than the light is
+  deliberate: it leaves the rocks at full brightness, so contrast goes up rather than down.
+- `GameManager.CaveDepth` (0 to 1) is the single depth number both lights read.
 
 ### Two traps this project keeps setting
 
@@ -255,25 +271,35 @@ Lower **Min Gap** for a harder game; raise **Min Depth** for chunkier rocks. All
 - `CharactersButton` is on the menu with no OnClick — it does nothing.
 - **Debris colliders are traced at runtime**, roughly every 0.9s at full difficulty. The most likely source of frame hitches on a mid-range phone. Pre-baking colliders onto the nine trash prefabs is the fix if it stutters.
 - **Possible gap under the cave.** Bottom rocks are placed at `floorY - overlap`, so their flat edge sits at −5.2, **not** at `floorY` −5. The camera sits at y −0.0287, so death triggers at −6.03. That leaves about 0.83 units. The fish's collider is 1.11 across so only a ~0.27-unit band lets it through, and it would be almost entirely below the visible screen. Never seen in play; worth knowing.
-- `HighScore` is declared in `GameManager` but never read or written. The tutorial does it with `PlayerPrefs` (1:11:34–1:12:55). `CurrentScore_Label` and `BestScore_Label` sit in the scene fully built but **do nothing at all** — no code touches either one, and nothing is missing from their wiring. They are waiting on the high score work below, not broken.
 - `Assets/Graphics/Rock Ostacles/Rock.png` is unused.
-- Button positions were typed into the scene file as coordinates, not composed by eye.
+- Button positions were typed into the scene file as coordinates, not composed by eye. The game
+  over panel's stat row is the exception — it is a `HorizontalLayoutGroup` and reflows itself.
+- **Imported sprites arrive as `spriteMode: 2` (Multiple)** and cannot be dropped into a UI Image
+  until switched to Single. This has caught four assets now; treat it as the default.
+- `CharactersButton` is on the menu with no OnClick — it does nothing.
+- Debris colliders are traced at runtime, the most likely source of frame hitches on a phone.
 
 ## Next up
 
 1. **A phone build.** Nothing since 2026-09-24 has been tested on a device. Tick Development
-   Build so a crash gives a stack trace.
-2. **A version label on the menu**, so a tester's report can be tied to a build. This was wanted
-   last round and still does not exist.
-3. **High score with `PlayerPrefs`**, feeding `CurrentScore_Label` and `BestScore_Label`, which
-   sit in the scene fully built and wired to nothing. `GameManager.HighScore` is declared and
-   never read or written.
-4. **The skin shop.** `GameManager.TotalCoins` is already banking to `PlayerPrefs` key `"Coins"`
-   for exactly this, and nothing displays it yet.
-5. **Sound effects** - the project has no audio at all.
+   Build so a crash gives a stack trace. The lighting pass especially needs real-device eyes.
+2. **Sound effects.** The project still has **no audio at all**. The mute toggle is already built
+   and drives `AudioListener.volume`, so anything added is covered by it with no extra wiring.
+3. **A light particle system for the fish** is being made by a teammate on a copy of the project.
+   Ask for it as a **prefab in a `.unitypackage`** (Include dependencies), never a zipped folder
+   and never their `SampleScene.unity` — this copy's scene has moved a long way.
+4. **A version label on the menu**, so a tester's report can be tied to a build. Wanted for two
+   rounds now and still does not exist.
+5. **The skin shop.** `GameManager.TotalCoins` banks to `PlayerPrefs` key `"Coins"` for exactly
+   this, and nothing spends it yet.
 6. **Android app icons** - every slot is empty, so it ships with the default Unity icon.
-7. **A "TAP TO START" prompt** on the get-ready screen. The fish bobs, which carries the message,
-   but a label would be clearer. Needs one TMP object in the Canvas.
+7. **Pause and game over disagree on button order.** Game over reads HOME-left / RESTART-right;
+   pause still reads RESTART-left / HOME-right. Same two actions, mirrored, on screens seconds
+   apart. Three coordinates to fix.
+
+Done since this list was last written: high score with `PlayerPrefs` (key `BestDistance`), the
+game over screen, and the get-ready state (removed rather than built, so the "TAP TO START"
+prompt it needed is moot).
 
 ---
 

@@ -4,9 +4,9 @@ using UnityEngine.Serialization;
 
 // Drops floating debris for the fish to dodge, and drives the difficulty ramp for the whole
 // run: the longer it lasts, the faster everything scrolls and the more often debris appears.
-// Both climb to a ceiling and stop. Lives on MyObstacleSpawner's GameObject, so
+// Both climb to a ceiling and stop. Lives on ObstacleSpawner's GameObject, so
 // ClearObstacles() sweeps debris too.
-[RequireComponent(typeof(MyObstacleSpawner))]
+[RequireComponent(typeof(ObstacleSpawner))]
 public class TrashSpawner : MonoBehaviour
 {
     [Header("Debris")]
@@ -34,8 +34,12 @@ public class TrashSpawner : MonoBehaviour
     [Tooltip("Seconds of play before full difficulty. Nothing gets harder after this.")]
     [SerializeField] private float rampSeconds = 90f;
 
-    [Tooltip("Starting scroll speed, as a multiple. 0.7 turns the rocks' 5 into 3.5.")]
-    [SerializeField] private float startSpeedMultiplier = 0.7f;
+    // Also sets how long the fish swims through empty water before the first rocks arrive: the
+    // dead distance is about 8.8 units with the fish at mid-screen, so the wait is that
+    // divided by this speed: 1.54s at 16:9, 1.87s on a 19.5:9 phone.
+    [Tooltip("Scroll speed at the start of a run, as a multiple of the rocks' own 5 units/sec. " +
+             "Raising it shortens the empty swim before the first rocks reach the fish.")]
+    [SerializeField] private float startSpeedMultiplier = 1.15f;
 
     [Tooltip("Scroll speed at full difficulty. 1.6 turns the rocks' 5 into 8.")]
     [SerializeField] private float maxSpeedMultiplier = 1.6f;
@@ -52,7 +56,8 @@ public class TrashSpawner : MonoBehaviour
     [Header("Currents")]
     // Careful above 1.4: at full difficulty the cave is already at 8 units/sec, and a
     // surge cuts reaction time by the same proportion it adds speed.
-    [Tooltip("Peak of a surge, as a multiple of the current speed. 1 turns currents off.")]
+    [Tooltip("Peak of a surge at FULL difficulty, as a multiple of the current speed. Ramps up " +
+             "from 1 across Ramp Seconds, so early surges are gentler. 1 turns currents off.")]
     [SerializeField] private float surgeStrength = 1.3f;
 
     [Tooltip("How long one surge takes to swell and fade, in seconds.")]
@@ -64,18 +69,34 @@ public class TrashSpawner : MonoBehaviour
     [Tooltip("Extra leftward speed for debris, in units per second. 0 locks it to the cave.")]
     [SerializeField] private float debrisCurrentPush = 1.2f;
 
-    private readonly List<GameObject> livePiecesList = new List<GameObject>();
-    private MyObstacleSpawner rockSpawner;
+    // Still water: the cave at its own speed with no swell on top. Both are multipliers, so 1
+    // is the identity rather than a tuned value, which is why they are consts and not fields.
+    private const float CALM_PACE = 1f;
+    private const float CALM_SURGE = 1f;
+
+    // How much of Surge Strength the first surges carry, before the ramp has built. Half, so the
+    // opening currents are felt but the deep cave is still twice as rough.
+    // ponytail: a const, not a field. A new SerializeField on a component already saved in the
+    // scene comes back as 0 in the Inspector, and 0 here silently restores the glassy opening.
+    private const float SURGE_AT_START = 0.5f;
+
+    // Spawned this far past the right edge so a piece is never seen appearing
+    private const float SPAWN_MARGIN = 1f;
+
+    private readonly List<GameObject> livePieces = new List<GameObject>();
+    private ObstacleSpawner rockSpawner;
     private float elapsed;
     private float nextSpawn;
     private int lastIndex = -1;
     private bool spawning;
 
+    // - Finds the rock spawner on this same object, which owns the corridor debris must land in.
     private void Awake()
     {
-        rockSpawner = GetComponent<MyObstacleSpawner>();
+        rockSpawner = GetComponent<ObstacleSpawner>();
     }
 
+    // - Opens the debris tap for a new run after resetting the difficulty ramp.
     public void StartSpawning()
     {
         ResetRun();
@@ -85,24 +106,35 @@ public class TrashSpawner : MonoBehaviour
         spawning = true;
     }
 
+    // - Closes the tap and puts the cave's shared speed back to calm.
+    // - Those are statics, so without this they would survive into the next run.
     public void StopSpawning()
     {
         spawning = false;
 
         // Statics, so they would otherwise survive into the next run
-        ObstacleMovement.SpeedMultiplier = 1f;
-        ObstacleMovement.Surge = 1f;
+        ObstacleMovement.SetPace(CALM_PACE, CALM_SURGE);
     }
 
+    // - Clears the run's state and puts the cave back to its opening speed.
+    // - Sets the surge too, not just the multiplier: leaving a stale swell behind is how a
+    //   reader ends up mistrusting both numbers.
     private void ResetRun()
     {
-        livePiecesList.Clear();
+        livePieces.Clear();
         elapsed = 0f;
         lastIndex = -1;
         nextSpawn = startInterval;
-        ObstacleMovement.SpeedMultiplier = startSpeedMultiplier;
+
+        // Surge is set here too, not just the multiplier. Update() overwrites it on the next
+        // frame either way, but leaving a stale swell in a field called "the current surge" is
+        // how a reader ends up mistrusting both of them.
+        ObstacleMovement.SetPace(startSpeedMultiplier, CALM_SURGE);
     }
 
+    // - Drives the whole run's difficulty: eases the cave's speed up to its ceiling, rides a
+    //   surge on top, and drops debris at a tightening interval.
+    // - Publishes one shared speed, so rocks, debris and coins cannot drift out of step.
     private void Update()
     {
         if (!spawning) return;
@@ -114,35 +146,49 @@ public class TrashSpawner : MonoBehaviour
         float ramped = Mathf.Lerp(startSpeedMultiplier, maxSpeedMultiplier, progress);
 
         // The current rides on top of the ramp, and is published so the fish feels it too
-        float surge = Surge();
-        ObstacleMovement.Surge = surge;
-        ObstacleMovement.SpeedMultiplier = ramped * surge;
+        float surge = Surge(progress);
+        ObstacleMovement.SetPace(ramped * surge, surge);
 
-        livePiecesList.RemoveAll(piece => piece == null);
+        livePieces.RemoveAll(piece => piece == null);
 
         if (elapsed < nextSpawn) return;
 
         nextSpawn = elapsed + Mathf.Lerp(startInterval, minInterval, progress);
 
-        if (livePiecesList.Count >= maxOnScreen) return;
+        if (livePieces.Count >= maxOnScreen) return;
 
         SpawnPiece();
     }
 
     // A swell passing through the cave. Multiplying the one shared speed keeps rocks, debris
     // and coins in lockstep. Derived from elapsed, so it needs no state of its own.
-    private float Surge()
+    // - Returns the swell passing through the cave right now, 1 in calm water.
+    // - Derived from elapsed so it needs no state of its own, and ramped with depth so shallow
+    //   water shoves gently and the deep cave shoves hard.
+    private float Surge(float progress)
     {
         if (surgeStrength <= 1f || surgeSeconds <= 0f || surgeInterval <= 0f) return 1f;
 
         float phase = elapsed % (surgeInterval + surgeSeconds);
         if (phase < surgeInterval) return 1f;
 
+        // The swell grows with the same ramp that drives speed: shallow water already shoves, the
+        // deep cave shoves twice as hard. Debris rides this for free -- ObstacleDrift multiplies
+        // its own push by Surge, so the deeper current carries the trash faster with no second
+        // number to keep in step.
+        //
+        // Starts at a fraction of full rather than at 1, so the very first surge is felt. Lerping
+        // from 1 made the opening minute glassy, which read as the currents being broken.
+        float strength = Mathf.Lerp(1f + (surgeStrength - 1f) * SURGE_AT_START, surgeStrength, progress);
+
         // A sine arch, so the swell eases in and out instead of snapping on
         float t = (phase - surgeInterval) / surgeSeconds;
-        return 1f + (surgeStrength - 1f) * Mathf.Sin(t * Mathf.PI);
+        return 1f + (strength - 1f) * Mathf.Sin(t * Mathf.PI);
     }
 
+    // - Drops one piece of debris just past the right edge, inside the clear corridor.
+    // - Gives up if the rocks have not reached that far, or the gap is too tight for the piece
+    //   plus the room it needs to turn and wander.
     private void SpawnPiece()
     {
         int index = PickTrash(lastIndex);
@@ -157,7 +203,7 @@ public class TrashSpawner : MonoBehaviour
         // Its own reach plus however far it may wander, so it can never end up inside a rock
         float clearance = radius + driftY;
 
-        float x = CameraRightEdge() + 1f;
+        float x = CameraEdges.Right + SPAWN_MARGIN;
         if (!rockSpawner.TryGetGapAt(x, out float low, out float high)) return;
         if (high - low < clearance * 2f) return;
 
@@ -184,11 +230,12 @@ public class TrashSpawner : MonoBehaviour
         drift.Configure(driftY, driftMinSpeed, driftMaxSpeed);
         drift.ConfigureCurrent(rockSpawner, debrisCurrentPush, radius);
 
-        livePiecesList.Add(piece);
+        livePieces.Add(piece);
         lastIndex = index;
     }
 
     // Any piece except the one used last time
+    // - Picks a trash prefab that is not the one used last time, so two never arrive in a row.
     private int PickTrash(int lastUsed)
     {
         if (trashPrefabsArray.Length == 1 || lastUsed < 0)
@@ -201,6 +248,9 @@ public class TrashSpawner : MonoBehaviour
         return index;
     }
 
+    // - Checks every trash prefab can be spawned before the run starts.
+    // - The sprite is checked too, since SpawnPiece reads sprite.bounds and would otherwise
+    //   throw on the first drop rather than report a clear error here.
     private bool HasValidTrash()
     {
         if (trashPrefabsArray == null || trashPrefabsArray.Length == 0)
@@ -224,9 +274,4 @@ public class TrashSpawner : MonoBehaviour
         return true;
     }
 
-    private float CameraRightEdge()
-    {
-        Camera cam = Camera.main;
-        return cam.transform.position.x + cam.orthographicSize * cam.aspect;
-    }
 }

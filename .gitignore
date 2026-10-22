@@ -115,3 +115,6 @@ InitTestScene*.unity*
 
 # Timestamped restore points. Git is the history once this is committed.
 Backups/
+
+# Generated ad media. Kept locally; not game content and 47MB of it.
+Ad/
