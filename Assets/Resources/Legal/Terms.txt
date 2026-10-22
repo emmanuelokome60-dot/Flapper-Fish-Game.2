@@ -1,0 +1,139 @@
+TERMS OF USE - ABYSSAL FISH
+
+Last updated: [10/23/2026]
+Made by: [ABYSSAL TEAM]
+Contact: [EMAIL]
+
+Please read this before playing. By installing or playing Abyssal Fish you
+accept everything written here. If you do not accept it, do not play, and
+uninstall the game.
+
+
+1. WHAT THIS IS
+
+Abyssal Fish is a student project. It was made by students as schoolwork for
+[EUAS / MOBILE GAME DEVELOPMENT COURSE].
+
+We are not a company. We are not a game studio. We are not professional
+programmers, designers, artists, testers or sound engineers. Nobody was paid
+to make this and nobody is being paid for it now. The game is given away free.
+
+There is no contract between us and you. There is no customer relationship.
+There is no service being sold.
+
+
+2. THIS GAME IS NOT FINISHED
+
+You should assume the game is incomplete and will behave badly in ways we have
+not found. In particular:
+
+- It is not finished. Features may be missing, half-made or broken.
+- It is not optimised. It may run slowly, heat your device, or drain battery
+  faster than a properly made game would.
+- It is not properly tested. We tested it on the few devices we own. We have
+  no idea how it behaves on yours.
+- It may crash, freeze, or stop responding at any time.
+- Your saved progress - high score, coins, unlocked fish - may be lost,
+  corrupted or reset without warning. Do not treat it as safe.
+- Bugs that we do know about may never be fixed.
+
+
+3. MADE WITH AI ASSISTANCE
+
+A large part of this game was created with the help of artificial intelligence
+tools, including the programming, the text and some of the artwork.
+
+We did not write or fully review every line of it. We do not claim to fully
+understand everything it does. We cannot promise the code is correct, safe,
+efficient or free of mistakes. Please take this into account before you
+install it.
+
+
+4. NO WARRANTY
+
+The game is provided "as is" and "as available", with no warranty of any kind,
+whether stated or implied.
+
+We do not promise that the game works, that it is fit for any purpose, that it
+is accurate, that it is secure, that it is free of errors, or that it will keep
+working in the future.
+
+You use it entirely at your own risk.
+
+
+5. NO LIABILITY
+
+To the fullest extent the law allows, we - the students who made this game, and
+anyone who helped us - accept no responsibility and no liability for any loss
+or damage of any kind arising from the game, including:
+
+- Damage to your phone, tablet or any other device
+- Damage to the battery, screen, storage or any other component
+- Overheating, slowdown, or reduced device performance
+- Loss, corruption or deletion of any data, files, photos or saved games
+- Loss of money, charges, fees or costs of any kind
+- Problems with any account of yours, of any kind, anywhere
+- Lost time, lost progress, or lost opportunity
+- Any other direct, indirect, accidental or consequential harm
+
+This applies whether the problem was caused by a bug, by bad code, by the AI
+tools we used, by our inexperience, or by something we never thought of.
+
+If you do not accept this, do not install or play the game.
+
+
+6. YOUR RESPONSIBILITY
+
+- Install and play the game at your own risk.
+- Back up anything on your device that you care about.
+- Stop playing and uninstall immediately if your device overheats, behaves
+  strangely, or if anything seems wrong.
+- Do not play while doing anything that needs your attention.
+- Do not install it on a device you cannot afford to have problems with.
+
+
+7. CHILDREN
+
+If you are under 18, please ask a parent or guardian to read this with you
+before you play.
+
+
+8. NO SUPPORT
+
+We do not provide support. We are students and this was coursework.
+
+There is no help desk, no guaranteed reply, no promised bug fixes and no
+promised updates. We may stop working on the game, change it, or remove it
+completely at any time, without notice and without explanation.
+
+
+9. OTHER PEOPLE'S WORK
+
+The game is built with the Unity engine and uses third-party packages, fonts,
+sounds and art assets. Those remain the property of their owners and are used
+under their own licences. We claim no ownership of them.
+
+If you believe something in this game infringes your rights, contact us at
+[EMAIL] and we will remove it.
+
+
+10. CHANGES TO THESE TERMS
+
+We may change these terms. The version included in the app you have installed
+is the version that applies to you.
+
+
+11. LAW
+
+These terms are governed by the laws of [YOUR COUNTRY].
+
+Nothing here is intended to remove any legal right you have that cannot be
+removed by agreement. Some countries do not allow certain warranties or
+certain liability to be excluded. Where that is the case, our liability is
+limited to the smallest amount the law permits, and the rest of these terms
+still apply.
+
+
+12. CONTACT
+
+[EMAIL]

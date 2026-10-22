@@ -4,8 +4,6 @@ using UnityEngine.Serialization;
 
 // Drops floating debris for the fish to dodge, and drives the difficulty ramp for the whole
 // run: the longer it lasts, the faster everything scrolls and the more often debris appears.
-// Both climb to a ceiling and stop. Lives on ObstacleSpawner's GameObject, so
-// ClearObstacles() sweeps debris too.
 [RequireComponent(typeof(ObstacleSpawner))]
 public class TrashSpawner : MonoBehaviour
 {
@@ -76,8 +74,6 @@ public class TrashSpawner : MonoBehaviour
 
     // How much of Surge Strength the first surges carry, before the ramp has built. Half, so the
     // opening currents are felt but the deep cave is still twice as rough.
-    // ponytail: a const, not a field. A new SerializeField on a component already saved in the
-    // scene comes back as 0 in the Inspector, and 0 here silently restores the glassy opening.
     private const float SURGE_AT_START = 0.5f;
 
     // Spawned this far past the right edge so a piece is never seen appearing
@@ -162,9 +158,6 @@ public class TrashSpawner : MonoBehaviour
 
     // A swell passing through the cave. Multiplying the one shared speed keeps rocks, debris
     // and coins in lockstep. Derived from elapsed, so it needs no state of its own.
-    // - Returns the swell passing through the cave right now, 1 in calm water.
-    // - Derived from elapsed so it needs no state of its own, and ramped with depth so shallow
-    //   water shoves gently and the deep cave shoves hard.
     private float Surge(float progress)
     {
         if (surgeStrength <= 1f || surgeSeconds <= 0f || surgeInterval <= 0f) return 1f;
@@ -176,9 +169,6 @@ public class TrashSpawner : MonoBehaviour
         // deep cave shoves twice as hard. Debris rides this for free -- ObstacleDrift multiplies
         // its own push by Surge, so the deeper current carries the trash faster with no second
         // number to keep in step.
-        //
-        // Starts at a fraction of full rather than at 1, so the very first surge is felt. Lerping
-        // from 1 made the opening minute glassy, which read as the currents being broken.
         float strength = Mathf.Lerp(1f + (surgeStrength - 1f) * SURGE_AT_START, surgeStrength, progress);
 
         // A sine arch, so the swell eases in and out instead of snapping on

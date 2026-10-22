@@ -88,8 +88,6 @@ public class PlayerController : MonoBehaviour
     // True only on the frame the fish actually swims. The lure light reads this rather than
     // polling the pointer itself, so it inherits every guard below for free: no flicker while
     // dead, while paused, on the menu, or when the tap was aimed at a UI button.
-    // ponytail: a frame-flag, not an event. A light reading it one frame late is invisible;
-    // make it an event if anything ever needs the exact frame.
     public bool SwamThisFrame { get; private set; }
 
     // - Reads the swim input and gives the fish its upward kick.
@@ -118,9 +116,6 @@ public class PlayerController : MonoBehaviour
     // A slow rise and sink so the fish reads as suspended in water rather than switched off.
     // The menu holds timeScale at 0, which stops FixedUpdate and the rigidbody with it; Update
     // still runs, so this moves the transform itself off the unscaled clock.
-    //
-    // Scoped to the menu, not to "frozen": pause and game over are frozen too, and a fish still
-    // drifting there reads as the pause not having taken, or as a dead fish still swimming.
     private void MenuIdle()
     {
         if (GameManager.Instance == null || !GameManager.Instance.OnMenu) return;
@@ -206,9 +201,6 @@ public class PlayerController : MonoBehaviour
     // The fish the player picked in the shop. ResetPlayer calls it, which covers StartGame and
     // BackToMenu; GameManager.ShowCharacters calls it too, because closing the shop goes through
     // neither of those and the menu fish would otherwise keep the old skin until the next run.
-    //
-    // Read from PlayerPrefs, NOT FishInventory.EquippedIndex: the shop panel is inactive at scene
-    // load, so its Awake has not run and the property reads 0 whatever the save says.
     public void ApplySkin()
     {
         if (fishRenderer == null || skins == null || skins.Length == 0) return;

@@ -3,10 +3,6 @@ using UnityEngine;
 // Where the screen ends, in world units. Four scripts had each grown their own private copy of
 // these one-line methods -- three copies too many -- and ObstacleMovement was calling
 // Camera.main once per obstacle per frame to get one of them.
-//
-// Static because there is one camera and it never moves in this game. Cached rather than asked
-// for each time, and the cache survives the camera being destroyed: Unity's == null reports true
-// for a destroyed object as well as a missing one, so the next call simply fetches again.
 public static class CameraEdges
 {
     private static Camera cached;

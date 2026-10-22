@@ -4,16 +4,6 @@ using UnityEngine;
 // Reset the shop's save state from inside Unity.
 //
 // Two caches make this fiddly, and both have already cost a session:
-//   1. The Editor reads PlayerPrefs into memory once per session, so editing the registry from
-//      outside is invisible to the running game and is overwritten when Unity quits. Going through
-//      PlayerPrefs here changes the very copy the game reads.
-//   2. GameManager reads the wallet into a C# field in Awake. Writing PlayerPrefs while Play is
-//      running does not touch that field, and the next coin or purchase writes the stale value
-//      straight back over it.
-//
-// So: these refuse to run during Play. Stop Play, use them, press Play.
-//
-// Editor-only, so none of this ships in a build.
 public static class FishShopDebug
 {
     private const string OWNED_KEY = "FishOwned";
@@ -23,6 +13,15 @@ public static class FishShopDebug
     // 0, not a mask: which fish ship free is FishInventory.Load's decision (every block but the
     // last), and duplicating that rule here is how the two would drift apart. 0 means "owns
     // nothing beyond what ships free", which is exactly what a fresh save looks like.
+    [MenuItem("Tools/Fish Shop/Reset Legal Acceptance (shows the terms gate again)")]
+    // - Clears the stored acceptance so the first-launch terms gate appears on the next Play.
+    private static void ResetLegal()
+    {
+        if (PlayStopped() == false) return;
+        LegalNotice.ClearAcceptance();
+        Report("legal acceptance cleared -- the terms gate shows on the next Play");
+    }
+
     [MenuItem("Tools/Fish Shop/Reset Skins (locks the paid fish)")]
     // - Clears every owned fish and the equipped choice, putting the shop back to a fresh install.
     private static void ResetSkins()
@@ -59,8 +58,6 @@ public static class FishShopDebug
 
     // Changing the save under a running game is silently undone, so say so rather than pretend.
     // - Refuses to run any of these while the game is playing.
-    // - GameManager caches the wallet in a field at Awake, so a mid-play write is ignored and
-    //   then overwritten when Play stops.
     private static bool PlayStopped()
     {
         if (!EditorApplication.isPlaying) return true;

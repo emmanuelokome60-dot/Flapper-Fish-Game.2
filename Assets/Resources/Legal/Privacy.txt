@@ -1,0 +1,98 @@
+PRIVACY POLICY - ABYSSAL FISH
+
+Last updated: [10/23/2026]
+Made by: [ABYSSAL TEAM]
+Contact: [EMAIL]
+
+
+SHORT VERSION
+
+We collect nothing. Nothing you do in this game is sent anywhere. The game has
+no internet connection, no accounts, no ads and no analytics. The only thing it
+saves is your game progress, and it stays on your phone.
+
+
+1. WHAT WE COLLECT
+
+Nothing.
+
+We do not collect, store, transmit, sell or share any personal data. We never
+see any information about you or your device. We could not identify you if we
+wanted to.
+
+Specifically, we do not collect:
+
+- Your name, email address, phone number or any contact details
+- Your location
+- Your device ID, advertising ID or any other identifier
+- Your contacts, photos, files, microphone or camera
+- Your IP address
+- Any usage statistics, crash reports or analytics
+- Anything else
+
+
+2. WHAT IS SAVED ON YOUR PHONE
+
+The game saves your progress on your own device, using the standard app storage
+the operating system provides. It is five numbers:
+
+1. Your best distance (your high score)
+2. How many coins you have
+3. Which fish you have unlocked
+4. Which fish you are currently using
+5. Whether sound is on or off
+
+That is the complete list. These stay on your device. They are never uploaded,
+never shared, and never seen by us or by anyone else.
+
+
+3. NO INTERNET CONNECTION
+
+The game does not connect to the internet. It has no servers, no backend and no
+online features.
+
+- There are no accounts and no logins.
+- There are no advertisements.
+- There are no analytics or tracking tools.
+- There are no third-party services, SDKs or trackers of any kind.
+- There are no in-app purchases. The coins in the game are not real money,
+  cannot be bought, and have no value outside the game.
+
+
+4. PERMISSIONS
+
+The game does not ask for access to your contacts, location, camera,
+microphone, photos or files.
+
+
+5. HOW TO DELETE YOUR DATA
+
+Because everything is stored only on your device, you control all of it:
+
+- Uninstall the app. Everything is deleted with it.
+- Or, to keep the app but reset your progress: Settings > Apps > Abyssal Fish >
+  Storage > Clear data.
+
+You do not need to ask us, and there is nothing for us to delete on our side.
+
+
+6. CHILDREN
+
+We do not collect data from anyone, so we do not collect data from children.
+
+The game has no chat, no social features, no user-generated content, no
+advertising and no purchases.
+
+
+7. CHANGES TO THIS POLICY
+
+If a future version of the game ever collects anything, this policy will be
+updated before that version is released, and the change will be described here.
+
+The version included in the app you have installed is the version that applies
+to you.
+
+
+8. CONTACT
+
+[EMAIL]

@@ -5,15 +5,6 @@ using UnityEngine.UI;
 // The fish shop behind the Characters button. Five blocks on a horizontally scrolling shelf:
 // locked ones can be bought with coins, owned ones can be equipped, and exactly one is equipped
 // at a time.
-//
-// The scrolling is not here. A ScrollRect set to horizontal already does dragging, momentum and
-// clamping on touch, and how many blocks fit on screen is decided by their width and spacing in
-// the Inspector rather than by any code. This class only decides what each block LOOKS like and
-// what its button does.
-//
-// Blocks are read as the children of `content` rather than wired one by one. Each block's artwork
-// is its own Image and its button is a child, which is the structure the shelf is built with
-// anyway -- so adding a sixth fish later means adding a block, not editing this file.
 public class FishInventory : MonoBehaviour
 {
     [Header("Shelf")]
@@ -53,8 +44,6 @@ public class FishInventory : MonoBehaviour
     //
     // Do NOT read this to skin the in-game fish: the panel is inactive at scene load, so Awake has
     // not run and this reads 0 whatever the save says. Read PlayerPrefs "FishEquipped" instead.
-    // ponytail: records the choice only. Point Player_Fish/Animator's SpriteRenderer at it once
-    // the bare-fish art exists.
     public int EquippedIndex { get; private set; }
 
     // Five booleans in one int. A bitmask rather than five keys because PlayerPrefs has no array
@@ -128,8 +117,6 @@ public class FishInventory : MonoBehaviour
     // Re-read on open rather than only in Awake. Coins earned during a run change what the player
     // can afford, and the panel is not rebuilt between visits -- and reading the save again here
     // means anything that changed it outside the panel is picked up by closing and reopening.
-    // - Re-reads the save every time the shop opens, so coins earned in a run are reflected.
-    // - The panel is not rebuilt between visits, which is why this cannot live in Awake.
     private void OnEnable()
     {
         if (cardArt != null) Load();
@@ -146,8 +133,6 @@ public class FishInventory : MonoBehaviour
         // Every fish but the last ships with the game: the player can swap skins from the first
         // launch and saves coins for one aspirational fish. Derived from the block count rather
         // than a constant, so adding a block makes it the new one to buy without touching this.
-        // The > 1 guard is not paranoia: at length 0 the shift count goes negative and C# masks
-        // it to 5 bits, so 1 << -1 would become 1 << 31.
         if (cardArt.Length > 1) ownedMask |= (1 << (cardArt.Length - 1)) - 1;
 
         if (!Owns(EquippedIndex)) EquippedIndex = 0;
@@ -195,9 +180,6 @@ public class FishInventory : MonoBehaviour
     // The single place that decides what a block looks like. Every block is redrawn from
     // EquippedIndex each time, which is what makes "only one is equipped" true by construction
     // rather than by remembering to clear the last one.
-    // - The single place that decides how every block looks: card art, badge, price, wallet.
-    // - Redrawing all of them from the equipped index each time is what makes one-equipped-at-
-    //   a-time true by construction rather than by remembering to clear the last one.
     private void Refresh()
     {
         for (int i = 0; i < cardArt.Length; i++)

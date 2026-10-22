@@ -24,8 +24,6 @@ public class ObstacleMovement : MonoBehaviour
     // any script could write them and a second writer would be invisible at the call site --
     // which is exactly how they once survived into the next run. TrashSpawner owns the ramp and
     // calls this; everything else reads the properties above.
-    // - Sets the pace of the whole cave in one place: rocks, debris and coins all read it.
-    // - TrashSpawner owns the ramp and is the only caller; everything else reads the properties.
     public static void SetPace(float speedMultiplier, float surge)
     {
         SpeedMultiplier = speedMultiplier;

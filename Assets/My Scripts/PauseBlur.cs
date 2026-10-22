@@ -3,8 +3,6 @@ using UnityEngine.UI;
 
 // The frozen, blurred, darkened backdrop behind the pause and game over screens: a dim that
 // swallows taps aimed at the frozen game, and a blurred still of the last frame under it.
-// Not a MonoBehaviour -- GameManager builds one on the first pause, so there is no component
-// to wire and nothing to go missing in the scene.
 public class PauseBlur
 {
     private readonly Transform canvasRoot;
@@ -28,9 +26,6 @@ public class PauseBlur
     // Darkens the frozen game behind the buttons and swallows taps aimed at it. Whatever has to
     // stay readable on top is passed in: this class decides the stacking, the caller decides
     // what is in the stack, so it never has to know what a game over panel is.
-    // - Raises or hides the dim and the blurred snapshot behind a menu.
-    // - Everything passed in raiseAbove is lifted above the dim; anything left out stays under it
-    //   and stops taking taps, which is how Pause ends up untappable while paused.
     public void Show(bool visible, params GameObject[] raiseAbove)
     {
         if (dim == null)
@@ -69,8 +64,6 @@ public class PauseBlur
 
         // UI draws in sibling order: the dim above the run, these above the dim. Anything not
         // raised here stays under it, which is how Pause and the score end up untappable.
-        // The caller passes them in the order it wants them stacked -- the panel before the
-        // GAME OVER text, or the panel background covers it.
         blur.transform.SetAsLastSibling();
         dim.transform.SetAsLastSibling();
 
@@ -82,9 +75,6 @@ public class PauseBlur
 
     // A RenderTexture is native memory and is not collected with the object that held it, so
     // GameManager.OnDestroy() has to say when this is finished with.
-    // - Frees the RenderTexture the blur draws into.
-    // - Native memory, so it is not collected with the object that held it; GameManager.OnDestroy
-    //   has to say when it is finished with.
     public void Release()
     {
         if (blurTexture != null) blurTexture.Release();
@@ -104,8 +94,6 @@ public class PauseBlur
     // Raises whichever top-level object under the Canvas contains this one. Calling
     // SetAsLastSibling on the object itself only reorders it among its own siblings, so once
     // the UI is grouped into panels it would move within its group and stay under the dim.
-    // - Lifts one object above the dim by walking up to its top-level ancestor and moving that.
-    // - Moving the ancestor rather than the object keeps a panel's children in their own order.
     private void Raise(GameObject target)
     {
         if (target == null) return;
@@ -123,14 +111,6 @@ public class PauseBlur
     // Blurs the frozen game behind the dim, by grabbing one frame rather than blurring live.
     // timeScale is 0 the whole time the dim is up, so a still is indistinguishable from the
     // real thing, and this costs nothing per frame. No shader, no renderer feature, no asset.
-    //
-    // The softness comes from halving the frame several times instead of dropping straight to
-    // a small size. Every halving is a 2x2 bilinear average, so detail is blended away; the
-    // earlier attempt took one jump to 1/8 and stretched that back, which keeps every 8th
-    // pixel exactly as it was and reads blocky. Same still-frame trick, right number of steps.
-    // - Grabs the screen and blurs it by halving it down and back up a few times.
-    // - Cheaper than a real blur shader and close enough behind a dim, which is the only place
-    //   it is ever seen.
     private void Capture()
     {
         Camera cam = Camera.main;
@@ -153,13 +133,6 @@ public class PauseBlur
 
         // The Canvas is Screen Space - Overlay, so UI is composited after the camera and never
         // lands in this capture. The dim and the buttons cannot blur themselves.
-        //
-        // Cleared opaque for the capture only. The scene camera's Background colour is alpha 0,
-        // so anything the game did not draw over came back transparent and every halving
-        // averaged that 0 outwards -- which is why the HUD ghosted through at 5 or 6 steps but
-        // looked fine at 2. Fixing it here rather than by choosing a format with no alpha channel
-        // leaves the format free to be a plain 8-bit one. Restored immediately: the live camera
-        // keeps its own clear.
         RenderTexture wasTargeting = cam.targetTexture;
         Color wasBackground = cam.backgroundColor;
 
@@ -184,13 +157,6 @@ public class PauseBlur
 
         // Temporaries go back to the pool as soon as anything else asks for one, so the result
         // is copied into a texture this class owns before the RawImage is pointed at it.
-        //
-        // Plain 8-bit, not the RGB565 this used to ask for. That format was here only to drop
-        // the alpha channel, which the opaque clear above now handles properly -- and it cost
-        // 5 bits of red and blue to do it. The cave sits in the bottom tenth of the range, so
-        // 32 levels of red is not enough to hold a dark gradient: it quantised into flat patches
-        // with hard edges, which is what read as distorted pixels behind the pause and game
-        // over screens.
         if (blurTexture == null || blurTexture.width != width || blurTexture.height != height)
         {
             if (blurTexture != null) blurTexture.Release();

@@ -70,8 +70,6 @@ public class ObstacleSpawner : MonoBehaviour
 
     // Below about twice the fish's 1.11 collider the corridor stops being a test of timing and
     // becomes a coin flip -- more so on a phone, where a thumb covers the fish.
-    // ponytail: a const, not a field. A new SerializeField on a component already saved in the
-    // scene comes back as 0, and 0 here would silently remove the floor it exists to be.
     private const float ABSOLUTE_MIN_GAP = 2.2f;
 
     // The rows start just past the right edge so the first rocks slide in rather than pop in
@@ -87,8 +85,6 @@ public class ObstacleSpawner : MonoBehaviour
 
     // The GameManager decides when spawning starts, so nothing spawns on scene load
     // - Opens the rock tap for a new run and parks both rows just past the right edge.
-    // - Refuses if a prefab slot is unusable, so the run continues without rocks rather than
-    //   throwing once a frame.
     public void StartSpawning()
     {
         // Rows start past the right edge, so the first rocks slide in. That swim is the whole
@@ -159,9 +155,6 @@ public class ObstacleSpawner : MonoBehaviour
     // thing the player reads, not two systems to tune against each other. It also staggers the
     // difficulty for free -- CaveDepth saturates at 400m, roughly half way through the speed
     // ramp, so the gap is done closing while the speed is still climbing.
-    //
-    // Null-safe: no GameManager means the mouth of the cave, not the deep.
-    // - The smallest opening allowed right now, tightening as the run goes deeper.
     private float CurrentGap()
     {
         float depth = GameManager.Instance != null ? GameManager.Instance.CaveDepth : 0f;
@@ -249,9 +242,6 @@ public class ObstacleSpawner : MonoBehaviour
 
     // The clear corridor at a given X, so debris lands in the cave and not inside a rock.
     // False until both rows have reached that far.
-    // - Reports the clear corridor at one X, so debris and coins land in the gap and not in rock.
-    // - False until both rows have actually reached that far, which is why spawners give up
-    //   quietly at the start of a run.
     public bool TryGetGapAt(float x, out float low, out float high)
     {
         low = floorY;
