@@ -118,3 +118,11 @@ Backups/
 
 # Generated ad media. Kept locally; not game content and 47MB of it.
 Ad/
+
+# Claude Code's local state: machine-specific settings plus 25MB of stale git
+# worktrees. The worktrees hold no commits main does not already have, so there
+# is nothing in here to keep and committing it would duplicate the whole project.
+.claude/
+
+# Local cache for the code-review-graph tool. Rebuilt on demand.
+.code-review-graph/
