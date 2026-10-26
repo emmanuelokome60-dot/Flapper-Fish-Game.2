@@ -1,6 +1,6 @@
 # Abyssal Fish
 
-A one-tap underwater swimmer for Android. You are an anglerfish with a single lamp on your head,
+A one-tap underwater swimmer for Android. You are an anglerfish with a single light source on you,
 swimming deeper into a cave that gets darker and narrower the further you go. Dodge the rocks and
 the drifting trash, collect only the coins, and ride out the currents that shove you sideways when
 you can least afford it.
