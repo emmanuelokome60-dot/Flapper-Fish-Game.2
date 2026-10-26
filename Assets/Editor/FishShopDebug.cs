@@ -1,20 +1,23 @@
 using UnityEditor;
 using UnityEngine;
 
-// Reset the shop's save state from inside Unity.
+// Adds a Tools menu inside Unity for resetting the shop's saved data while testing.
 //
-// Two caches make this fiddly, and both have already cost a session:
+// Two things hold copies of that data, and both have already cost a session of confusion:
+//   1. The running game keeps the coins and the owned fish in memory. Change the save while it's
+//      playing and the game ignores you, then saves over your change when it stops.
+//   2. The Unity Editor itself keeps its own copy of the save. Editing the save from outside
+//      Unity doesn't work, because the Editor hands the game its old copy instead.
+//
+// So: always stop Play first, and always change things through this menu.
 public static class FishShopDebug
 {
     private const string OWNED_KEY = "FishOwned";
     private const string EQUIPPED_KEY = "FishEquipped";
     private const string COINS_KEY = "Coins";
 
-    // 0, not a mask: which fish ship free is FishInventory.Load's decision (every block but the
-    // last), and duplicating that rule here is how the two would drift apart. 0 means "owns
-    // nothing beyond what ships free", which is exactly what a fresh save looks like.
+    // - Forgets that you agreed to the terms, so the terms screen shows up again next Play.
     [MenuItem("Tools/Fish Shop/Reset Legal Acceptance (shows the terms gate again)")]
-    // - Clears the stored acceptance so the first-launch terms gate appears on the next Play.
     private static void ResetLegal()
     {
         if (PlayStopped() == false) return;
@@ -22,8 +25,12 @@ public static class FishShopDebug
         Report("legal acceptance cleared -- the terms gate shows on the next Play");
     }
 
+    // - Forgets every fish you own and which one you were wearing, like a brand new install.
+    // - We write plain 0, not a list of the free fish. Which fish come free is FishInventory's
+    //   decision (every slot except the last), and copying that rule into here is exactly how
+    //   the two would end up disagreeing later. 0 means "owns nothing beyond the free ones",
+    //   which is what a fresh save looks like anyway.
     [MenuItem("Tools/Fish Shop/Reset Skins (locks the paid fish)")]
-    // - Clears every owned fish and the equipped choice, putting the shop back to a fresh install.
     private static void ResetSkins()
     {
         if (PlayStopped() == false) return;
@@ -45,9 +52,9 @@ public static class FishShopDebug
     [MenuItem("Tools/Fish Shop/Show Save State")]
     private static void Show() { Report("current state"); }
 
-    // - Writes the wallet to an exact figure, for testing the shop at a known balance.
-    // - Goes through PlayerPrefs rather than the registry, so the Editor's cached copy and the
-    //   saved value cannot disagree.
+    // - Sets your coins to an exact number, for testing the shop with a known amount.
+    // - Goes through Unity's own save system rather than editing Windows' registry directly, so
+    //   the Editor's copy and the real saved value can't end up disagreeing.
     private static void SetCoins(int amount)
     {
         if (PlayStopped() == false) return;
@@ -56,8 +63,9 @@ public static class FishShopDebug
         Report("coins set to " + amount);
     }
 
-    // Changing the save under a running game is silently undone, so say so rather than pretend.
-    // - Refuses to run any of these while the game is playing.
+    // - Refuses to run any of these while the game is actually playing, and explains why.
+    // - Changing the save under a running game gets silently thrown away, so it's better to say
+    //   so than to pretend it worked.
     private static bool PlayStopped()
     {
         if (!EditorApplication.isPlaying) return true;
@@ -70,8 +78,9 @@ public static class FishShopDebug
         return false;
     }
 
-    // - Prints the save state to the Console, which is the only way to read what the running
-    //   game was actually handed rather than what the registry holds.
+    // - Prints the saved data to Unity's Console.
+    // - This is the only honest way to see what the game was ACTUALLY handed, rather than what's
+    //   sitting in the registry.
     private static void Report(string what)
     {
         Debug.Log("[FishShopDebug] " + what + " -- owned=" + PlayerPrefs.GetInt(OWNED_KEY, 0)

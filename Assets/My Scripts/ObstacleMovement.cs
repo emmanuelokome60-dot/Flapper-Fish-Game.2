@@ -1,63 +1,68 @@
 using UnityEngine;
 
-// Slides one obstacle left at the cave's shared pace and deletes it once it is off screen.
-// Added at runtime to rocks, debris and coins alike, so every one of them moves off the same
-// number and none of them can drift out of step.
+// Slides one thing leftwards and deletes it once it has left the screen.
+//
+// Rocks, rubbish and coins all get one of these, and they all read the same speed number. That's
+// the point: if each one had its own speed they would slowly drift out of step with each other.
 public class ObstacleMovement : MonoBehaviour
 {
-    // How much faster than its own speed the whole cave is moving. TrashSpawner ramps it.
+    // How much faster the whole cave is moving than its normal speed. TrashSpawner winds this up
+    // as the run goes on, which is how the game gets harder.
     public static float SpeedMultiplier { get; private set; } = 1f;
 
-    // Just the swell part: 1 in calm water, higher during a surge. The fish reads it too.
+    // Just the wave part: 1 in calm water, bigger while a surge is passing. The fish reads this
+    // too, so the current can shove it around.
     public static float Surge { get; private set; } = 1f;
 
-    [Tooltip("How fast obstacles slide left. Every rock must use the same speed.")]
+    [Tooltip("How fast things slide left. Every rock has to use the same number.")]
     [SerializeField] private float speed = 5f;
 
-    // Far enough past the edge that a rock is gone before it is deleted, close enough that
-    // nothing lingers. Not tunable: it is structural, and nothing about it rewards tweaking.
+    // How far past the edge a rock gets before we delete it. Far enough that you never see it
+    // pop out of existence, close enough that we aren't keeping dead rocks around. There is no
+    // reason to ever change this, so it isn't in the Inspector.
     private const float DESPAWN_MARGIN = 1f;
 
     private Renderer pieceRenderer;
 
-    // The pace of the whole cave, set in one place. These are statics: left as public fields,
-    // any script could write them and a second writer would be invisible at the call site --
-    // which is exactly how they once survived into the next run. TrashSpawner owns the ramp and
-    // calls this; everything else reads the properties above.
+    // The speed of the whole cave, changed in one place only.
+    //
+    // The two values above are shared by every rock in the game at once. They're locked so only
+    // this method can change them: if any script could write to them, a second script quietly
+    // writing one would be almost impossible to spot. That is exactly how they once leaked from
+    // one run into the next. TrashSpawner is in charge of the speed and calls this; everyone
+    // else just reads.
     public static void SetPace(float speedMultiplier, float surge)
     {
         SpeedMultiplier = speedMultiplier;
         Surge = surge;
     }
 
-    // Enter Play Mode has domain reload disabled (EditorSettings m_EnterPlayModeOptions: 3), so
-    // these statics would otherwise carry the previous session's values into the next one -- stop
-    // Play mid-surge and the next run begins mid-swell. Runs before the first scene loads whether
-    // or not domain reload is on, which is the only reliable place to undo it.
+    // - Puts the cave's speed back to calm before the game loads.
+    // - Needed because this project has a Unity setting turned on that makes pressing Play
+    //   faster by NOT wiping shared values like the two above. Handy, except it means stopping
+    //   Play in the middle of a surge left the next run starting mid-surge. This wipes them by
+    //   hand, and it runs before the first scene loads, which is the only place that always works.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    // - Puts the shared pace back to calm before the first scene loads.
-    // - Enter Play Mode has domain reload off, so without this a run would inherit the previous
-    //   session's speed -- stop Play mid-surge and the next run began mid-swell.
     private static void ResetStatics()
     {
         SpeedMultiplier = 1f;
         Surge = 1f;
     }
 
-    // - Caches the renderer, which the despawn test below needs every frame.
+    // - Finds the thing that draws this object and remembers it, because the check below needs
+    //   it every frame.
     private void Awake()
     {
         pieceRenderer = GetComponentInChildren<Renderer>();
     }
 
-    // - Slides this obstacle left at the cave's shared speed, then deletes it once it is gone.
-    // - The test waits for the renderer's right edge to clear the screen, so a wide rock does
-    //   not vanish while part of it is still visible.
+    // - Slides this object left at the cave's speed, then deletes it once it's gone.
+    // - We wait for its RIGHT edge to pass the screen edge, so a really wide rock doesn't
+    //   disappear while you can still see half of it.
     private void Update()
     {
         transform.position += Vector3.left * (speed * SpeedMultiplier) * Time.deltaTime;
 
-        // Wait for the right edge to clear the screen, so wide rocks don't vanish early
         float rightEdge = pieceRenderer != null ? pieceRenderer.bounds.max.x : transform.position.x;
         if (rightEdge < CameraEdges.Left - DESPAWN_MARGIN)
         {

@@ -459,8 +459,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.49617875, y: -0.004121065}
-  m_Radius: 1.0920508
+  m_Offset: {x: 0.49617875, y: 0.02936852}
+  m_Radius: 1.0585612
 --- !u!114 &193815497
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -473,15 +473,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 623e7c4ff6f4e73428b8438a41d68b58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  swimForce: 5
-  waterGravity: 1.2
-  waterDrag: 2
-  maxSinkSpeed: 4.4
-  currentPush: 3
-  currentReturn: 4
+  swimForce: 4.6
+  waterGravity: 1
+  waterDrag: 1.5
+  maxSinkSpeed: 3.2
+  currentPush: 9
+  currentReturn: 2.5
   rotationSpeed: 10
-  maxTiltUp: 5
-  maxTiltDown: -60
+  maxTiltUp: 20
+  maxTiltDown: -40
   tiltSmoothing: 5
   skins:
   - {fileID: -1817037104350664956, guid: b20542dd8b861834f9bf5f60193db40e, type: 3}
@@ -1708,7 +1708,7 @@ MonoBehaviour:
   unitsPerSecond: 5
   caveLight: {fileID: 619394801}
   startLight: 0.05
-  deepLight: 0.02
+  deepLight: 0.12
   darkestAtDistance: 300
   startFractionFromLeft: 0.4
   buttonClick: {fileID: 8300000, guid: 2fa0d7208bade0b448a1c65403965768, type: 3}
@@ -1717,7 +1717,7 @@ MonoBehaviour:
   movementPopVolume: 0.05
   gameOverClip: {fileID: 8300000, guid: ea4ee5235f81b6a4c947158c354de2db, type: 3}
   bgMusic: {fileID: 8300000, guid: 94143d4422f006f4083e358cdba0fee4, type: 3}
-  bgMusicVolume: 0.3
+  bgMusicVolume: 0.5
 --- !u!4 &706398571
 Transform:
   m_ObjectHideFlags: 0
@@ -6789,8 +6789,8 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.552
-  m_Color: {r: 0.79349947, g: 0.98490566, b: 0.9609799, a: 1}
-  m_Intensity: 2.5
+  m_Color: {r: 0.35533726, g: 0.9843137, b: 0.90729624, a: 1}
+  m_Intensity: 1.3
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000
@@ -6814,7 +6814,7 @@ MonoBehaviour:
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 1.5
-  m_PointLightOuterRadius: 4
+  m_PointLightOuterRadius: 4.6
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1

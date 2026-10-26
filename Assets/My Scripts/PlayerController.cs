@@ -3,35 +3,40 @@ using UnityEngine.Serialization;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
+// The fish you control. Reads your taps, swims up, sinks down, tilts, and wears whichever skin
+// you picked in the shop.
 public class PlayerController : MonoBehaviour
 {
-    // Auto-wired in Awake()
+    // Found automatically in Awake()
     private Rigidbody2D rb;
 
-    [Tooltip("How far up the fish swims on each press. Lower = smaller swim.")]
+    [Tooltip("How far up the fish swims on each tap. Lower = smaller hops, finer control.")]
     [FormerlySerializedAs("_swimForce")]
     [SerializeField] private float swimForce = 4f;
 
     [Header("Underwater Feel")]
-    [Tooltip("How strongly the fish sinks. Lower = floatier. Flappy Bird is around 3-4.")]
+    [Tooltip("How strongly the fish is pulled down. Lower = floatier.")]
     [FormerlySerializedAs("_waterGravity")]
     [SerializeField] private float waterGravity = 1.2f;
 
-    [Tooltip("Water resistance, so movement glides instead of snapping.")]
+    [Tooltip("How thick the water feels. Higher = the fish glides and slows down instead of " +
+             "snapping about. This is what stops it feeling like a bird.")]
     [FormerlySerializedAs("_waterDrag")]
     [SerializeField] private float waterDrag = 1f;
 
-    [Tooltip("Fastest the fish can sink, so it drifts down instead of dropping.")]
+    [Tooltip("The fastest the fish is allowed to sink. Keep this low or it drops like a stone " +
+             "and one missed tap costs you half a gap.")]
     [FormerlySerializedAs("_maxSinkSpeed")]
     [SerializeField] private float maxSinkSpeed = 4.5f;
 
     [Header("Current")]
-    [Tooltip("How hard a surge shoves the fish back, in units per second. 0 turns it off.")]
+    [Tooltip("How hard a surge shoves the fish backwards. 0 turns currents off.")]
     [FormerlySerializedAs("_currentPush")]
     [SerializeField] private float currentPush = 3f;
 
-    // The fish settles where this balances the push, so it can never be walked off screen
-    [Tooltip("How strongly the fish swims back to its start. Higher = less drift.")]
+    // The fish ends up sitting wherever these two cancel out, so a current can never drag it
+    // off the side of the screen no matter how long it lasts
+    [Tooltip("How hard the fish swims back to its starting spot. Higher = it gets shoved less.")]
     [FormerlySerializedAs("_currentReturn")]
     [SerializeField] private float currentReturn = 4f;
 
@@ -43,62 +48,67 @@ public class PlayerController : MonoBehaviour
     [FormerlySerializedAs("_maxTiltDown")]
     [SerializeField] private float maxTiltDown = -45f;
 
-    [Tooltip("How quickly the fish turns to its new angle. Lower = smoother.")]
+    [Tooltip("How quickly the fish swings round to its new angle. Lower = smoother.")]
     [FormerlySerializedAs("_tiltSmoothing")]
     [SerializeField] private float tiltSmoothing = 5f;
 
     [Header("Skins")]
-    [Tooltip("One bare fish per shelf block, in shelf order. Index 0 is the fish the game ships with.")]
+    [Tooltip("One plain fish per shop shelf slot, in shelf order. Slot 0 is the starting fish.")]
     [SerializeField] private Sprite[] skins;
 
     public bool IsAlive { get; private set; } = true;
 
-    // Where the fish swims back to between surges, set by ResetPlayer()
+    // The spot the fish swims back to after a current shoves it. Set by ResetPlayer()
     private float homeX;
 
-    // The height the menu idle bobs around, set by ResetPlayer() beside homeX
+    // The height the fish bobs around on the menu. Set by ResetPlayer() next to homeX
     private float homeY;
 
-    // How the fish drifts while the menu holds the game at timeScale 0.
-    // ponytail: consts, not serialized fields. A new [SerializeField] on a component already
-    // saved in the scene comes back as 0, and 0 here is the frozen fish this exists to fix.
-    private const float IDLE_BOB_HEIGHT = 0.12f;   // world units either side of rest
-    private const float IDLE_BOB_SPEED = 1.4f;     // radians per second
-    private const float IDLE_TILT = 3f;            // degrees
+    // How the fish drifts on the menu, while the game is frozen.
+    //
+    // These are plain constants, NOT Inspector fields, and that's deliberate. Adding a new
+    // Inspector field to a script that's already saved in the scene makes it load as 0 — and 0
+    // here would mean a totally still fish, which is the exact bug this code exists to fix.
+    private const float IDLE_BOB_HEIGHT = 0.12f;   // how far it floats up and down
+    private const float IDLE_BOB_SPEED = 1.4f;     // how fast it bobs
+    private const float IDLE_TILT = 3f;            // how far it tips, in degrees
 
-    // Lives on the Animator child, not here. Found rather than wired, so there is no Inspector
-    // reference to go stale if that child is ever renamed or rebuilt.
+    // The picture of the fish lives on a child object, not this one. We go and find it rather
+    // than filling in an Inspector slot, so nothing breaks if that child gets renamed or rebuilt.
     private SpriteRenderer fishRenderer;
 
-    // - Wires up the rigidbody and the sprite renderer on the child, and applies the water
-    //   feel from the Inspector.
-    // - Writing gravity and damping here means these fields win over whatever the scene saved.
+    // - Finds the physics body and the fish picture, then applies the water settings above.
+    // - Setting gravity and drag HERE means the numbers above always win over whatever the scene
+    //   happened to have saved. So tune the fish on this script, never on its Rigidbody 2D.
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         fishRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        // Stop physics spinning the fish when it bumps into things
+        // Stops the physics from spinning the fish round when it bumps something
         rb.freezeRotation = true;
 
         rb.gravityScale = waterGravity;
         rb.linearDamping = waterDrag;
     }
 
-    // True only on the frame the fish actually swims. The lure light reads this rather than
-    // polling the pointer itself, so it inherits every guard below for free: no flicker while
-    // dead, while paused, on the menu, or when the tap was aimed at a UI button.
+    // True only on the single frame the fish actually swims.
+    //
+    // The head lamp watches this instead of watching for taps itself, which means it gets all the
+    // rules below for free: no flash while dead, while paused, on the menu, or when your tap was
+    // really aimed at a button.
     public bool SwamThisFrame { get; private set; }
 
-    // - Reads the swim input and gives the fish its upward kick.
-    // - Guarded so a tap cannot swim while dead, while frozen, or when it was meant for a button.
+    // - Checks whether you asked to swim, and if so gives the fish its kick upwards.
+    // - Guarded so a tap can't swim while you're dead, while frozen, or when it was meant for
+    //   a button.
     private void Update()
     {
         SwamThisFrame = false;
 
         if (!IsAlive) return;
 
-        // Frozen on the menu and the game over screen, so a button press is not also a swim
+        // Frozen on the menu and the game over screen, so pressing a button isn't also a swim
         if (Time.timeScale == 0f)
         {
             MenuIdle();
@@ -113,31 +123,34 @@ public class PlayerController : MonoBehaviour
         if (GameManager.Instance != null) GameManager.Instance.PlayMovementPop();
     }
 
-    // A slow rise and sink so the fish reads as suspended in water rather than switched off.
-    // The menu holds timeScale at 0, which stops FixedUpdate and the rigidbody with it; Update
-    // still runs, so this moves the transform itself off the unscaled clock.
+    // Floats the fish slowly up and down on the menu, so it looks like it's hanging in water
+    // rather than switched off.
+    //
+    // The menu freezes the game, which stops the physics completely. Update still runs though, so
+    // we move the fish ourselves and use the real-world clock instead of the game clock.
     private void MenuIdle()
     {
         if (GameManager.Instance == null || !GameManager.Instance.OnMenu) return;
 
         float t = Time.unscaledTime * IDLE_BOB_SPEED;
 
-        // Rebuilt from homeY every frame rather than nudged along. A menu can sit for minutes,
-        // and an accumulated offset is what once walked the scrolling background out of step.
+        // We work out the height fresh from homeY every frame instead of nudging it along a bit
+        // at a time. A menu can sit there for several minutes, and tiny errors adding up is
+        // exactly what once walked the scrolling background out of line.
         Vector3 position = transform.position;
         position.y = homeY + Mathf.Sin(t) * IDLE_BOB_HEIGHT;
         transform.position = position;
 
-        // A quarter-phase behind the rise, so the nose lags it instead of pivoting around it
+        // Deliberately a bit behind the up-and-down movement, so the nose trails after the body
+        // instead of swinging around it
         transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t - Mathf.PI * 0.5f) * IDLE_TILT);
     }
 
-    // Space, a mouse click, or a screen tap all make the fish swim
-    // - True on the frame a swim was asked for: space, a click, or a screen tap.
-    // - Taps landing on UI are rejected here, so a button press is never also a swim.
+    // - True on the frame you asked to swim: spacebar, a mouse click, or a tap on the screen.
+    // - Taps that landed on a button are thrown out here, so pressing a button never also swims.
     private bool SwimPressed()
     {
-        // A tap on a UI button must not also swim
+        // A tap on a button must not also make the fish swim
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return false;
 
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) return true;
@@ -146,44 +159,43 @@ public class PlayerController : MonoBehaviour
         return false;
     }
 
-    // - Runs the physics side: the current shoves the fish back and it swims home afterwards,
-    //   the sink speed is capped, and the body tilts toward where it is heading.
-    // - The pull home grows with distance, so displacement caps and nothing accumulates.
+    // - Does the physics: the current shoves the fish back, the fish swims home again, sinking is
+    //   capped, and the body tilts towards wherever it's heading.
     private void FixedUpdate()
     {
-        // The current shoves the fish back and it swims home afterwards. The pull home grows
-        // with distance, so displacement caps at push / currentReturn and nothing accumulates.
         if (IsAlive)
         {
+            // The further the fish gets from home, the harder it swims back. That's why a current
+            // can only ever shove it so far and no further, and why nothing builds up over time.
             float push = (ObstacleMovement.Surge - 1f) * currentPush;
             float home = (homeX - transform.position.x) * currentReturn;
             rb.linearVelocityX = home - push;
         }
 
-        // Sink slowly, like in water
+        // Sink slowly, like something underwater should
         if (rb.linearVelocity.y < -maxSinkSpeed)
         {
             rb.linearVelocityY = -maxSinkSpeed;
         }
 
-        // Tilt up when swimming up, down when sinking, clamped so it never flips over
+        // Nose up when swimming up, nose down when sinking, with limits so it never flips over
         float targetAngle = rb.linearVelocity.y * rotationSpeed;
         targetAngle = Mathf.Clamp(targetAngle, maxTiltDown, maxTiltUp);
 
-        // Turn towards it gradually instead of snapping
+        // Swing round to that angle gradually instead of snapping to it
         float angle = Mathf.LerpAngle(transform.eulerAngles.z, targetAngle, tiltSmoothing * Time.fixedDeltaTime);
         transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 
-    // - Marks the fish dead on any real collision. PlayerHit ends the run separately.
+    // - Marks the fish as dead the moment it properly bumps into anything. PlayerHit is what
+    //   actually ends the run.
     private void OnCollisionEnter2D(Collision2D collision)
     {
         IsAlive = false;
     }
 
-    // Called by the GameManager when a run starts
-    // - Puts the fish back to its starting position, upright and still, ready for a run.
-    // - Called by both StartGame and BackToMenu, which is why the skin is applied from here.
+    // - Puts the fish back at the start: right place, facing straight, not moving, ready to go.
+    // - Both StartGame and BackToMenu call this, which is why the skin gets applied from in here.
     public void ResetPlayer(Vector3 startPosition)
     {
         transform.position = startPosition;
@@ -198,17 +210,19 @@ public class PlayerController : MonoBehaviour
         ApplySkin();
     }
 
-    // The fish the player picked in the shop. ResetPlayer calls it, which covers StartGame and
-    // BackToMenu; GameManager.ShowCharacters calls it too, because closing the shop goes through
-    // neither of those and the menu fish would otherwise keep the old skin until the next run.
+    // - Puts on whichever fish you picked in the shop.
+    // - ResetPlayer calls this, which covers starting a game and going back to the menu.
+    //   GameManager.ShowCharacters calls it too, because closing the shop goes through neither of
+    //   those, and without it the menu fish would keep the old skin until your next run.
     public void ApplySkin()
     {
         if (fishRenderer == null || skins == null || skins.Length == 0) return;
 
         int skin = PlayerPrefs.GetInt(FishInventory.EQUIPPED_KEY, 0);
 
-        // Falls back to the shipped fish rather than leaving the last run's sprite on screen.
-        // Block 6 has no skin yet, so an index past the end is a real case, not paranoia.
+        // If the saved choice doesn't exist, fall back to the starting fish rather than leaving
+        // the last run's picture on screen. Shelf slot 6 has no fish yet, so a bad number here
+        // is a real thing that happens, not us being paranoid.
         if (skin < 0 || skin >= skins.Length || skins[skin] == null) skin = 0;
 
         if (skins[skin] != null) fishRenderer.sprite = skins[skin];

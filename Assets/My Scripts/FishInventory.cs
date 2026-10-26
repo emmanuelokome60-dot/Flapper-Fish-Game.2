@@ -2,56 +2,64 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The fish shop behind the Characters button. Five blocks on a horizontally scrolling shelf:
-// locked ones can be bought with coins, owned ones can be equipped, and exactly one is equipped
-// at a time.
+// The fish shop you get to from the Characters button.
+//
+// It's a shelf you swipe sideways. Fish you haven't got yet are grey and can be bought with coins.
+// Fish you own can be worn. Exactly one fish is worn at any time.
 public class FishInventory : MonoBehaviour
 {
     [Header("Shelf")]
-    [Tooltip("The ScrollRect's Content. Its children are the fish blocks, in shelf order.")]
+    [Tooltip("The scrolling area's Content object. The things inside it are the fish slots, " +
+             "in the order they appear on the shelf.")]
     [SerializeField] private Transform content;
 
     [Header("Card art")]
-    [Tooltip("The grey card shown for a fish that has not been bought yet.")]
+    [Tooltip("The grey card shown for a fish you haven't bought yet.")]
     [SerializeField] private Sprite lockedArt;
 
-    [Tooltip("One card per fish, in the same order as the blocks. Index 0 is owned from the " +
-             "start -- it is the fish the game ships with.")]
+    [Tooltip("One card per fish, in the same order as the shelf slots. The first one is yours " +
+             "from the start -- it's the fish the game comes with.")]
     [SerializeField] private Sprite[] fishArt;
 
     [Header("Button art")]
-    [Tooltip("Shown on a locked block. Clicking it spends the price.")]
+    [Tooltip("Shown on a fish you don't own yet. Tapping it spends your coins.")]
     [SerializeField] private Sprite buyArt;
 
-    [Tooltip("Shown on an owned block that is not the equipped one.")]
+    [Tooltip("Shown on a fish you own but aren't currently wearing.")]
     [SerializeField] private Sprite selectArt;
 
-    [Tooltip("Shown on the one equipped block. Clicking it does nothing.")]
+    [Tooltip("Shown on the one fish you're wearing. Tapping it does nothing.")]
     [SerializeField] private Sprite equippedArt;
 
     [Header("Price")]
-    [Tooltip("Coins to unlock one fish. The same for every block.")]
+    [Tooltip("How many coins one fish costs. Same price for all of them.")]
     [Min(0)]
     [SerializeField] private int price = 300;
 
     [Header("Wallet")]
-    // The run counters are hidden on the menu, so without this a player cannot see their balance
-    // on the one screen that charges them. Optional so the shelf still runs before it is wired.
-    [Tooltip("Shows the coin wallet while the shop is open. Leave empty to show no balance.")]
+    // The score counters are hidden on the menu, so without this you couldn't see how many coins
+    // you have on the one screen that actually takes them off you. Optional, so the shelf still
+    // works before this slot is filled in.
+    [Tooltip("Shows your coin total while the shop is open. Leave empty to show no total.")]
     [SerializeField] private TMP_Text walletText;
 
-    // Which fish the player is wearing, for this panel's own drawing.
+    // Which fish you're wearing. Used by this panel for its own drawing.
     //
-    // Do NOT read this to skin the in-game fish: the panel is inactive at scene load, so Awake has
-    // not run and this reads 0 whatever the save says. Read PlayerPrefs "FishEquipped" instead.
+    // Do NOT read this to decide what the in-game fish looks like. This panel is switched off when
+    // the scene loads, so its setup hasn't run yet and this reads 0 no matter what you saved.
+    // Read the saved "FishEquipped" value instead.
     public int EquippedIndex { get; private set; }
 
-    // Five booleans in one int. A bitmask rather than five keys because PlayerPrefs has no array
-    // and five parallel keys is five chances to write one and not the others.
+    // Which fish you own, packed into a single whole number.
+    //
+    // Think of the number in binary: one digit per fish, 1 for owned and 0 for not. We do it this
+    // way because Unity's save system can't store a list, and five separate saved values would be
+    // five chances to accidentally update one and forget the others.
     private const string OWNED_KEY = "FishOwned";
 
-    // Public because PlayerController reads it to skin the in-game fish. One const rather than
-    // the same string literal typed into two files, which is how the two end up disagreeing.
+    // Public because PlayerController reads this to pick the in-game fish. It's written down once,
+    // here, rather than typed as text into two different files — which is how two files end up
+    // quietly disagreeing about the name.
     public const string EQUIPPED_KEY = "FishEquipped";
 
     private Image[] cardArt;
@@ -59,8 +67,9 @@ public class FishInventory : MonoBehaviour
     private TMP_Text[] priceText;
     private int ownedMask;
 
-    // - Reads the shelf's blocks out of the hierarchy and wires each badge to its own index.
-    // - Blocks are found rather than listed in the Inspector, so adding a fish needs no edit here.
+    // - Finds all the fish slots on the shelf and connects each button to its own slot number.
+    // - The slots are found in code rather than listed in the Inspector, so adding a new fish
+    //   needs no changes in here at all.
     private void Awake()
     {
         if (content == null)
@@ -92,47 +101,49 @@ public class FishInventory : MonoBehaviour
 
             buttons[i] = button;
 
-            // Captured per block, or every button would act on the last value of i
+            // We copy i into its own variable here. Without that, all the buttons would end up
+            // sharing one counter and every single one of them would act on the LAST slot.
             int index = i;
             button.onClick.AddListener(() => OnBlockClicked(index));
         }
 
-        // Same coin art AND the same size as the run counter -- see BuildWalletCounter. Sizing
-        // this box's icon from its own height instead gave the shop a 73.6px coin against the
-        // run's 80px, which reads as the balance having changed meaning between screens.
+        // The shop's coin total uses the same coin picture AND the same size as the in-game one.
+        // Letting the shop work out its own size gave it a 73.6px coin against the game's 80px,
+        // which makes it look like the number means something different on each screen.
         if (walletText != null && GameManager.Instance != null)
         {
             GameManager.Instance.BuildWalletCounter(walletText);
 
-            // The box is pivoted top-right, so fitting it to its content is what puts the digits
-            // ON the frame edge. A fixed 300-wide box with Left-aligned text -- and Left is
-            // forced, because BuildCoinIcon pins the coin to the box's left edge -- left a gap
-            // that grew as the balance got shorter.
+            // The text box hangs from its top-right corner, so shrinking it to fit its text is
+            // what keeps the digits pinned neatly to the edge of the frame. A fixed 300-wide box
+            // with the text on the left instead left a gap that got bigger as your coin total
+            // got shorter.
             ContentSizeFitter fitter = walletText.GetComponent<ContentSizeFitter>();
             if (fitter == null) fitter = walletText.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         }
     }
 
-    // Re-read on open rather than only in Awake. Coins earned during a run change what the player
-    // can afford, and the panel is not rebuilt between visits -- and reading the save again here
-    // means anything that changed it outside the panel is picked up by closing and reopening.
+    // - Re-reads your save every time the shop opens, not just once at the start.
+    // - Coins you earned during a run change what you can afford, and this panel isn't rebuilt
+    //   between visits. Reading the save again here also means anything that changed it from
+    //   elsewhere gets picked up just by closing and reopening the shop.
     private void OnEnable()
     {
         if (cardArt != null) Load();
     }
 
-    // - Loads which fish are owned and which is worn, then redraws the shelf.
-    // - Every block but the last is free by construction, so adding a block makes it the new
-    //   one to buy without touching this.
+    // - Loads which fish you own and which you're wearing, then redraws the shelf.
     private void Load()
     {
         ownedMask = PlayerPrefs.GetInt(OWNED_KEY, 0);
         EquippedIndex = PlayerPrefs.GetInt(EQUIPPED_KEY, 0);
 
-        // Every fish but the last ships with the game: the player can swap skins from the first
-        // launch and saves coins for one aspirational fish. Derived from the block count rather
-        // than a constant, so adding a block makes it the new one to buy without touching this.
+        // Every fish except the LAST one comes free with the game. That way you can swap fish from
+        // the very first launch, and you save your coins up for one special fish to aim for.
+        //
+        // Worked out from how many slots there are, not written down as a number, so adding a new
+        // slot automatically makes it the new one to save up for without touching this line.
         if (cardArt.Length > 1) ownedMask |= (1 << (cardArt.Length - 1)) - 1;
 
         if (!Owns(EquippedIndex)) EquippedIndex = 0;
@@ -140,36 +151,34 @@ public class FishInventory : MonoBehaviour
         Refresh();
     }
 
-    // - True when the player owns that fish, read out of the owned bitmask.
-    // - Guards a negative index: C# masks a shift count to 5 bits, so 1 << -1 would become
-    //   1 << 31 and report nonsense.
+    // - True if you own that fish. Reads one digit out of the packed number described above.
+    // - It also guards against a negative slot number. Old versions of the game saved -1 to mean
+    //   "nothing worn", and the maths here would turn -1 into 31 and give a nonsense answer.
     private bool Owns(int index)
     {
-        // Guards a negative saved index -- earlier builds wrote -1 for "nothing equipped", and C#
-        // masks a shift count to 5 bits, so 1 << -1 would quietly become 1 << 31.
         return index >= 0 && (ownedMask & (1 << index)) != 0;
     }
 
-    // - Buys the fish if it is locked and affordable, then equips it either way.
-    // - Buying equips too, because nobody spends 300 coins and then wants a second button.
+    // - Buys the fish if you don't own it and can afford it, then wears it either way.
     private void OnBlockClicked(int index)
     {
         if (!Owns(index))
         {
-            // Fails silently and leaves the wallet alone when the player is short. TrySpendCoins
-            // checks and subtracts in one step, so there is no window where the fish is granted
-            // and the coins are not taken.
+            // Does nothing and leaves your coins alone if you can't afford it. TrySpendCoins both
+            // checks and subtracts in one go, so there's no gap in between where you could get
+            // the fish without paying for it.
             if (GameManager.Instance == null) return;
             if (!GameManager.Instance.TrySpendCoins(price)) return;
 
             ownedMask |= 1 << index;
             PlayerPrefs.SetInt(OWNED_KEY, ownedMask);
 
-            // A bought fish that does not survive the app being killed is a stolen 300 coins
+            // Saved straight away. A fish you bought that vanishes when the app closes is
+            // 300 stolen coins.
             PlayerPrefs.Save();
         }
 
-        // Buying equips it too. Nobody spends 300 coins and then wants to press a second button.
+        // Buying also wears it. Nobody spends 300 coins and then wants to press a second button.
         EquippedIndex = index;
         PlayerPrefs.SetInt(EQUIPPED_KEY, EquippedIndex);
         PlayerPrefs.Save();
@@ -177,9 +186,9 @@ public class FishInventory : MonoBehaviour
         Refresh();
     }
 
-    // The single place that decides what a block looks like. Every block is redrawn from
-    // EquippedIndex each time, which is what makes "only one is equipped" true by construction
-    // rather than by remembering to clear the last one.
+    // - The one and only place that decides what a shelf slot looks like.
+    // - Every slot is redrawn from scratch each time. That's what makes "only one fish is worn"
+    //   automatically true, instead of relying on somebody remembering to un-wear the old one.
     private void Refresh()
     {
         for (int i = 0; i < cardArt.Length; i++)
@@ -188,14 +197,16 @@ public class FishInventory : MonoBehaviour
 
             if (cardArt[i] != null)
             {
-                // fishArt may be unassigned: every other array here is reached through a
-                // null check, and this one threw instead of drawing the locked card.
+                // The fish pictures might not be filled in yet. Everything else in here is checked
+                // for being empty, and this one wasn't — it crashed instead of just drawing the
+                // grey locked card.
                 bool hasArt = fishArt != null && i < fishArt.Length;
                 Sprite art = owned && hasArt ? fishArt[i] : lockedArt;
                 if (art != null) cardArt[i].sprite = art;
             }
 
-            // Hidden on an owned card: that strip is where the fish's description sits.
+            // The price is hidden once you own the fish, because that strip of the card is where
+            // the fish's description goes.
             if (priceText[i] != null)
             {
                 priceText[i].gameObject.SetActive(!owned);
@@ -207,8 +218,8 @@ public class FishInventory : MonoBehaviour
             Sprite badge = !owned ? buyArt : (i == EquippedIndex ? equippedArt : selectArt);
             if (badge != null && buttons[i].image != null) buttons[i].image.sprite = badge;
 
-            // Unity's own ColorTint disabled state, so a button the player cannot afford greys
-            // itself AND stops swallowing clicks. Without it, being broke looks like a dead button.
+            // Switching the button off makes Unity grey it out AND stop it eating taps. Without
+            // this, being short of coins just looks like a broken button.
             buttons[i].interactable = owned || (GameManager.Instance != null
                                                 && GameManager.Instance.TotalCoins >= price);
         }

@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// The frozen, blurred, darkened backdrop behind the pause and game over screens: a dim that
-// swallows taps aimed at the frozen game, and a blurred still of the last frame under it.
+// The frozen, blurry, darkened picture you see behind the pause and game over screens.
+//
+// Two layers: a blurry photo of the last frame of the game, and a dark sheet on top of it. The
+// dark sheet also soaks up any taps aimed at the frozen game underneath.
 public class PauseBlur
 {
     private readonly Transform canvasRoot;
@@ -13,9 +15,9 @@ public class PauseBlur
     private GameObject blur;
     private RenderTexture blurTexture;
 
-    // - Remembers where to build the dim and how dark and how blurred it should be.
-    // - Builds nothing yet; the objects are made on the first Show so a run that never pauses
-    //   never pays for them.
+    // - Remembers where to build things, and how dark and how blurry to make them.
+    // - Builds nothing right now. The layers get made the first time you actually pause, so a run
+    //   where you never pause never pays for them.
     public PauseBlur(Transform canvasRoot, float dimDarkness, int blurSteps)
     {
         this.canvasRoot = canvasRoot;
@@ -23,9 +25,10 @@ public class PauseBlur
         this.blurSteps = blurSteps;
     }
 
-    // Darkens the frozen game behind the buttons and swallows taps aimed at it. Whatever has to
-    // stay readable on top is passed in: this class decides the stacking, the caller decides
-    // what is in the stack, so it never has to know what a game over panel is.
+    // - Darkens the frozen game behind the buttons and soaks up taps meant for it.
+    // - You hand in whatever needs to stay readable on top. This class works out the layering;
+    //   the caller decides what goes in the pile. That way this never needs to know what a
+    //   "game over panel" even is.
     public void Show(bool visible, params GameObject[] raiseAbove)
     {
         if (dim == null)
@@ -34,14 +37,15 @@ public class PauseBlur
 
             dim = new GameObject("PauseDim", typeof(RectTransform), typeof(Image));
 
-            // Parented to the Canvas itself rather than to the Pause button's parent. Those
-            // were the same thing while every element sat directly under the Canvas, but the
-            // moment the UI is grouped into panels the button's parent is a group, and a dim
-            // built inside one group cannot cover the others.
+            // Attached to the Canvas itself, NOT to whatever holds the Pause button.
+            //
+            // Those used to be the same thing, back when every button sat directly on the Canvas.
+            // But once the buttons got grouped into panels, the Pause button's parent became a
+            // group — and a dark sheet built inside one group can't cover the other groups.
             dim.transform.SetParent(canvasRoot, false);
             Stretch(dim);
 
-            // A Graphic is a raycast target by default, which is what blocks the taps
+            // Anything drawn in the UI soaks up taps by default, which is what blocks the game
             dim.GetComponent<Image>().color = new Color(0f, 0f, 0f, dimDarkness);
         }
 
@@ -51,7 +55,7 @@ public class PauseBlur
             blur.transform.SetParent(canvasRoot, false);
             Stretch(blur);
 
-            // The dim sits on top of this and already swallows the taps
+            // The dark sheet sits on top of this one and already soaks up the taps
             blur.GetComponent<RawImage>().raycastTarget = false;
         }
 
@@ -62,8 +66,10 @@ public class PauseBlur
 
         Capture();
 
-        // UI draws in sibling order: the dim above the run, these above the dim. Anything not
-        // raised here stays under it, which is how Pause and the score end up untappable.
+        // The UI draws things in the order they're listed, so later = on top. Blur photo above the
+        // game, dark sheet above that, then the buttons above everything. Anything we don't lift
+        // up here stays buried under the dark sheet — which is exactly how the Pause button and
+        // the score end up untappable while you're paused.
         blur.transform.SetAsLastSibling();
         dim.transform.SetAsLastSibling();
 
@@ -73,15 +79,16 @@ public class PauseBlur
         }
     }
 
-    // A RenderTexture is native memory and is not collected with the object that held it, so
-    // GameManager.OnDestroy() has to say when this is finished with.
+    // - Hands the blur photo's memory back when we're finished with it for good.
+    // - This kind of texture isn't cleaned up automatically like normal objects are, so
+    //   GameManager has to tell us when the game is shutting down.
     public void Release()
     {
         if (blurTexture != null) blurTexture.Release();
     }
 
-    // Fill the Canvas whatever shape the device is
-    // - Pins a RectTransform to all four corners of its parent, so it covers any screen shape.
+    // - Pins something to all four corners of its parent, so it fills the screen whatever shape
+    //   the phone is.
     private static void Stretch(GameObject target)
     {
         RectTransform rect = target.GetComponent<RectTransform>();
@@ -91,9 +98,10 @@ public class PauseBlur
         rect.offsetMax = Vector2.zero;
     }
 
-    // Raises whichever top-level object under the Canvas contains this one. Calling
-    // SetAsLastSibling on the object itself only reorders it among its own siblings, so once
-    // the UI is grouped into panels it would move within its group and stay under the dim.
+    // - Lifts something to the front, on top of the dark sheet.
+    // - It walks UP the family tree first, and lifts the whole group this thing belongs to.
+    //   Lifting the object by itself would only move it to the front of its OWN group, and the
+    //   group as a whole would stay buried under the dark sheet.
     private void Raise(GameObject target)
     {
         if (target == null) return;
@@ -108,9 +116,10 @@ public class PauseBlur
         t.SetAsLastSibling();
     }
 
-    // Blurs the frozen game behind the dim, by grabbing one frame rather than blurring live.
-    // timeScale is 0 the whole time the dim is up, so a still is indistinguishable from the
-    // real thing, and this costs nothing per frame. No shader, no renderer feature, no asset.
+    // - Makes the blurry photo of the game behind the dark sheet.
+    // - It takes ONE photo and blurs that, instead of blurring the game live. The game is frozen
+    //   the whole time the pause screen is up, so a photo looks identical to the real thing — and
+    //   it costs nothing per frame. No shaders, no special assets, nothing to maintain.
     private void Capture()
     {
         Camera cam = Camera.main;
@@ -119,20 +128,23 @@ public class PauseBlur
         int width = Mathf.Max(1, Screen.width);
         int height = Mathf.Max(1, Screen.height);
 
-        // 24 depth bits rather than 0: Unity 6's Render Graph refuses to render a camera into
-        // a target whose Depth Stencil Format is None, and warns on every pause until it has
-        // one. Nothing here reads the depth; it just has to exist.
+        // The 24 at the end asks for depth bits. We don't use depth for anything here, but
+        // Unity 6 flatly refuses to draw a camera into a photo that has none, and prints a
+        // warning every single time you pause until you give it some. So it just has to be there.
         RenderTexture frame = RenderTexture.GetTemporary(width, height, 24);
 
-        // GetTemporary hands back a pooled texture carrying whatever filterMode its last user
-        // left on it, and the filter a Blit uses is the SOURCE's, not the destination's. Left
-        // unset, the first halving below reads one texel in four instead of averaging a 2x2
-        // block: it decimates rather than blurs, and those hard edges survive every later step
-        // however many times they are halved. The copies in the loop set it for the same reason.
+        // Borrowed photos come back from Unity's pool still carrying whatever smoothing setting
+        // the last person left on them, so we always set it ourselves.
+        //
+        // This matters more than it looks. When we shrink the photo below, the smoothing setting
+        // of the thing being READ decides what happens. Set to smooth, shrinking averages each
+        // 2x2 block of pixels together — a real blur. Left unset, it just grabs one pixel out of
+        // every four and throws the rest away. That's not blurry, it's just chunky, and those
+        // hard edges survive every shrink after it no matter how many times you halve it.
         frame.filterMode = FilterMode.Bilinear;
 
-        // The Canvas is Screen Space - Overlay, so UI is composited after the camera and never
-        // lands in this capture. The dim and the buttons cannot blur themselves.
+        // The UI is drawn on top AFTER the camera is done, so none of it lands in this photo.
+        // That's why the dark sheet and the buttons can't accidentally blur themselves.
         RenderTexture wasTargeting = cam.targetTexture;
         Color wasBackground = cam.backgroundColor;
 
@@ -142,6 +154,8 @@ public class PauseBlur
         cam.targetTexture = wasTargeting;
         cam.backgroundColor = wasBackground;
 
+        // Blur by halving the photo over and over. Each halving averages pixels together, so a
+        // few rounds of it leaves a soft, smeary picture. Cheap and it looks right.
         for (int step = 0; step < blurSteps; step++)
         {
             width = Mathf.Max(1, width / 2);
@@ -155,8 +169,8 @@ public class PauseBlur
             frame = smaller;
         }
 
-        // Temporaries go back to the pool as soon as anything else asks for one, so the result
-        // is copied into a texture this class owns before the RawImage is pointed at it.
+        // Borrowed photos get taken back the moment anything else asks for one, so we copy the
+        // finished blur into a photo we own before showing it on screen.
         if (blurTexture == null || blurTexture.width != width || blurTexture.height != height)
         {
             if (blurTexture != null) blurTexture.Release();

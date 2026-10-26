@@ -1,51 +1,58 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Drops coins into the cave's opening for the fish to collect. Deliberately has no speed
-// ramp of its own: coins carry ObstacleMovement and ride the shared SpeedMultiplier that
-// TrashSpawner drives, so two scripts never fight over one static. Only the spawn rate
-// ramps here. Lives on ObstacleSpawner's GameObject, so ClearObstacles() sweeps coins too.
+// Drops coins into the gap between the rocks for the fish to collect.
+//
+// This script does NOT speed the coins up as the run goes on. Coins get an ObstacleMovement, which
+// already reads the one shared cave speed that TrashSpawner is in charge of. If this script sped
+// them up too, two scripts would be fighting over the same number. The only thing that speeds up
+// here is how OFTEN coins appear.
+//
+// It sits on the same object as ObstacleSpawner, so when the game clears out the old rocks it
+// clears out the old coins at the same time.
 [RequireComponent(typeof(ObstacleSpawner))]
 public class CoinSpawner : MonoBehaviour
 {
     [Header("Coin")]
-    [Tooltip("The coin prefab. Its collider must stay Is Trigger, or pickup kills the fish.")]
+    [Tooltip("The coin to copy. Its collider MUST stay set to Is Trigger, or collecting a coin " +
+             "will kill the fish instead.")]
     [SerializeField] private GameObject coinPrefab;
 
-    [Tooltip("Largest dimension of a coin, in world units. Keep it under the fish's 1.33.")]
+    [Tooltip("How big a coin is. Keep it smaller than the fish, which is about 1.33.")]
     [SerializeField] private float coinSize = 0.7f;
 
-    [Tooltip("Degrees per second a coin turns on the spot. Direction is random, 0 for none.")]
+    [Tooltip("How fast a coin spins on the spot, in degrees a second. 0 for no spin.")]
     [SerializeField] private float spinDegrees = 25f;
 
     [Header("Drift")]
-    [Tooltip("How far a coin may rise or sink. The same is kept clear of the cave walls.")]
+    [Tooltip("How far a coin is allowed to float up or down from where it was dropped.")]
     [SerializeField] private float driftY = 0.4f;
 
-    [Tooltip("Clear space between a coin and the rock face, beyond the coin's own radius.")]
+    [Tooltip("How much clear space to leave between a coin and the rocks.")]
     [SerializeField] private float wallGap = 0.35f;
 
-    [Tooltip("How quickly coins wander, in world units per second.")]
+    [Tooltip("How fast coins float about, in units a second.")]
     [SerializeField] private float driftMinSpeed = 0.15f;
     [SerializeField] private float driftMaxSpeed = 0.5f;
 
     [Header("How often")]
-    [Tooltip("Seconds of play before coins come at their fastest. Matches TrashSpawner.")]
+    [Tooltip("How many seconds of play before coins come as fast as they ever will. Should " +
+             "match TrashSpawner.")]
     [SerializeField] private float rampSeconds = 90f;
 
     [Tooltip("Seconds between coins at the start of a run.")]
     [SerializeField] private float startInterval = 2.5f;
 
-    [Tooltip("Seconds between coins at full speed. 1 means at most one a second, ever.")]
+    [Tooltip("Seconds between coins once it's as fast as it gets. 1 means one a second at most.")]
     [SerializeField] private float minInterval = 1f;
 
-    [Tooltip("Most coins allowed on screen at once. A second cap, on top of the interval.")]
+    [Tooltip("Most coins allowed on screen at once. A second limit, on top of the timer above.")]
     [SerializeField] private int maxOnScreen = 5;
 
-    [Tooltip("Extra leftward speed for coins, in units per second. 0 locks them to the cave.")]
+    [Tooltip("How much faster than the cave coins drift. 0 locks them to the rocks.")]
     [SerializeField] private float coinCurrentPush = 1.2f;
 
-    // Lets the HUD show the same coin art without a second Inspector slot
+    // Lets the score display use the same coin picture without needing its own Inspector slot
     public Sprite CoinSprite
     {
         get
@@ -57,7 +64,7 @@ public class CoinSpawner : MonoBehaviour
         }
     }
 
-    // Spawned this far past the right edge so a coin is never seen appearing
+    // Coins are made this far past the right edge, so you never see one pop into existence
     private const float SPAWN_MARGIN = 1f;
 
     private readonly List<GameObject> liveCoins = new List<GameObject>();
@@ -66,16 +73,16 @@ public class CoinSpawner : MonoBehaviour
     private float nextSpawn;
     private bool spawning;
 
-    // - Finds the rock spawner on this same object, which is the only thing that knows where
-    //   the gap between the walls is.
+    // - Finds the rock spawner on this same object. It's the only thing that knows where the gap
+    //   between the top and bottom rocks is, which is where coins have to go.
     private void Awake()
     {
         rockSpawner = GetComponent<ObstacleSpawner>();
     }
 
-    // - Opens the coin tap for a new run, clearing anything left over from the last one.
-    // - Refuses if the coin prefab is unusable, so the run continues without coins rather than
-    //   throwing once a frame.
+    // - Starts dropping coins for a new run, forgetting anything left over from the last one.
+    // - If the coin is set up wrong it just doesn't start, so you get a run with no coins instead
+    //   of an error message once every frame.
     public void StartSpawning()
     {
         liveCoins.Clear();
@@ -87,27 +94,27 @@ public class CoinSpawner : MonoBehaviour
         spawning = true;
     }
 
-    // - Closes the tap. Coins already in the cave are swept by GameManager.ClearObstacles.
+    // - Stops dropping new coins. The ones already out there get cleared by GameManager.
     public void StopSpawning()
     {
         spawning = false;
     }
 
-    // - Counts down to the next coin and drops one when due, with the gap between drops
-    //   tightening as the run goes on.
-    // - Holds off entirely while the screen is already at its coin limit.
+    // - Counts down to the next coin and drops one when the timer runs out. The wait gets shorter
+    //   as the run goes on.
+    // - Skips dropping anything while the screen already has as many coins as it's allowed.
     private void Update()
     {
         if (!spawning) return;
 
         elapsed += Time.deltaTime;
 
-        // Collected and despawned coins leave nulls behind
+        // Coins that got collected or slid off screen leave empty holes in the list, so clear them
         liveCoins.RemoveAll(coin => coin == null);
 
         if (elapsed < nextSpawn) return;
 
-        // Eases to minInterval, then Clamp01 holds it at the cap
+        // Counts from 0 to 1 over rampSeconds, then stops at 1 and stays there
         float progress = rampSeconds > 0f ? Mathf.Clamp01(elapsed / rampSeconds) : 1f;
         nextSpawn = elapsed + Mathf.Lerp(startInterval, minInterval, progress);
 
@@ -116,18 +123,19 @@ public class CoinSpawner : MonoBehaviour
         SpawnCoin();
     }
 
-    // - Places one coin just past the right edge, inside the clear corridor between the walls.
-    // - Gives up silently if the rocks have not reached that far yet, or the gap is too tight for
-    //   the coin plus the room it needs to drift.
+    // - Puts one coin just past the right edge, somewhere inside the clear gap between the rocks.
+    // - Quietly gives up if the rocks haven't been built that far ahead yet, or if the gap is too
+    //   narrow to fit the coin plus the room it needs to float about in.
     private void SpawnCoin()
     {
         Vector2 spriteSize = coinPrefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
         float scale = coinSize / Mathf.Max(spriteSize.x, spriteSize.y);
 
-        // A coin turns as it drifts, so the room it needs is its diagonal
+        // A coin spins while it floats, so the space it needs is its corner-to-corner length,
+        // not its width
         float radius = new Vector2(spriteSize.x, spriteSize.y).magnitude * scale * 0.5f;
 
-        // Its own reach, however far it may wander, plus the gap that should still show
+        // The coin itself, plus however far it might wander, plus the gap we want to still see
         float clearance = radius + driftY + wallGap;
 
         float x = CameraEdges.Right + SPAWN_MARGIN;
@@ -138,8 +146,8 @@ public class CoinSpawner : MonoBehaviour
         coin.transform.position = new Vector3(x, Random.Range(low + clearance, high - clearance), 0f);
         coin.transform.localScale = new Vector3(scale, scale, 1f);
 
-        // The prefab ships with its trigger collider and sorting order 2, so neither is set here
-        // Holds the coin at the cave's speed, and lets ClearObstacles() find it on restart
+        // The coin already comes with its trigger collider and draw order set, so we leave those
+        // alone. This makes it slide along with the cave, and lets the restart clean-up find it.
         coin.AddComponent<ObstacleMovement>();
 
         if (spinDegrees > 0f)
@@ -155,9 +163,10 @@ public class CoinSpawner : MonoBehaviour
         liveCoins.Add(coin);
     }
 
-    // - Checks the coin prefab can actually be spawned before the run starts.
-    // - The sprite is checked too, because SpawnCoin reads sprite.bounds and would otherwise
-    //   throw on the first drop instead of reporting a clear error here.
+    // - Checks the coin is actually usable before the run starts.
+    // - We check the picture too, not just the object, because SpawnCoin measures the picture to
+    //   work out the size. Without this check it would crash on the very first coin instead of
+    //   telling you clearly what's wrong, here, up front.
     private bool HasValidCoin()
     {
         if (coinPrefab == null)
@@ -166,8 +175,6 @@ public class CoinSpawner : MonoBehaviour
             return false;
         }
 
-        // The sprite is checked too: SpawnCoin() reads sprite.bounds, so an empty
-        // Sprite Renderer would throw on the first spawn rather than be caught here
         SpriteRenderer renderer = coinPrefab.GetComponent<SpriteRenderer>();
         if (renderer == null || renderer.sprite == null)
         {
