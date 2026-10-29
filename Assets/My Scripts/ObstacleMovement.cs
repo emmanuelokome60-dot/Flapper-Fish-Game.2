@@ -7,7 +7,7 @@ using UnityEngine;
 public class ObstacleMovement : MonoBehaviour
 {
     // How much faster the whole cave is moving than its normal speed. TrashSpawner winds this up
-    // as the run goes on, which is how the game gets harder.
+    // as the run goes on deeper into the cave, which is how the game gets harder.
     public static float SpeedMultiplier { get; private set; } = 1f;
 
     // Just the wave part: 1 in calm water, bigger while a surge is passing. The fish reads this

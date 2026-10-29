@@ -1226,8 +1226,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 397, y: -242}
-  m_SizeDelta: {x: 462.5669, y: 257.97}
+  m_AnchoredPosition: {x: 600, y: 0}
+  m_SizeDelta: {x: 480.55173, y: 268}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &563635369
 CanvasRenderer:
@@ -1327,7 +1327,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.11
+  m_Intensity: 0.05
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000
@@ -1707,7 +1707,7 @@ MonoBehaviour:
   coinIconTextGap: 8
   unitsPerSecond: 5
   caveLight: {fileID: 619394801}
-  startLight: 0.05
+  startLight: 0.03
   deepLight: 0.12
   darkestAtDistance: 300
   startFractionFromLeft: 0.4
@@ -5485,8 +5485,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -213, y: -244.71}
-  m_SizeDelta: {x: 482.47037, y: 269.07}
+  m_AnchoredPosition: {x: -600, y: 0}
+  m_SizeDelta: {x: 480.55173, y: 268}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1024193868
 MonoBehaviour:
@@ -6506,8 +6506,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 92, y: 43}
-  m_SizeDelta: {x: 479.99588, y: 267.69}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 480.55173, y: 268}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1700000012
 CanvasRenderer:
