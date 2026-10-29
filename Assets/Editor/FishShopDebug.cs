@@ -12,8 +12,11 @@ using UnityEngine;
 // So: always stop Play first, and always change things through this menu.
 public static class FishShopDebug
 {
-    private const string OWNED_KEY = "FishOwned";
-    private const string EQUIPPED_KEY = "FishEquipped";
+    // Both fish keys come from FishInventory rather than being typed again here. They were typed
+    // twice once already, and a reset that clears a key nothing reads looks exactly like a reset
+    // that worked.
+    private const string OWNED_KEY = FishInventory.OWNED_KEY;
+    private const string EQUIPPED_KEY = FishInventory.EQUIPPED_KEY;
     private const string COINS_KEY = "Coins";
 
     // - Forgets that you agreed to the terms, so the terms screen shows up again next Play.

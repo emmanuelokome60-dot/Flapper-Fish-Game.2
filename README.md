@@ -41,8 +41,8 @@ learn.
 - **Rubbish floats past.** Old junk drifts through the cave and spins as it
   goes. Touching it ends your run.
 
-Coins are the only thing that is safe to touch. Save them up and spend them on
-new fish in the shop.
+Coins are the only thing that is safe to touch. Save up 300 of them to unlock
+the last fish in the shop.
 
 ---
 
@@ -67,15 +67,12 @@ The settings are already filled in for you.
 
 **All of this works:** the menu, a run, pausing, the game-over screen and the
 fish shop. Your coins are saved, so they are still there the next time you open
-the game. There are five fish you can buy and wear. The Terms and Privacy
-screens show up the first time you play. It has been tested on a real phone,
-not just on a computer.
+the game. There are five fish: four you can wear from the start, and a fifth
+you unlock with 300 coins. The Terms and Privacy screens show up the first time
+you play. It has been tested on a real phone, not just on a computer.
 
 **These parts are not done:**
 
-- The shop has a sixth slot with no fish drawn for it yet. You can buy it for
-  300 coins, but you just get the normal fish back. It needs a picture, or it
-  needs taking out.
 - The pictures are not packed together yet, so the game works harder to draw
   them than it needs to.
 - It has only been tested on one phone. More phones still need trying.

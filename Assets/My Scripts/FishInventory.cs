@@ -55,7 +55,14 @@ public class FishInventory : MonoBehaviour
     // Think of the number in binary: one digit per fish, 1 for owned and 0 for not. We do it this
     // way because Unity's save system can't store a list, and five separate saved values would be
     // five chances to accidentally update one and forget the others.
-    private const string OWNED_KEY = "FishOwned";
+    //
+    // Public for the same reason as EQUIPPED_KEY below. The Tools menu resets this key, and a
+    // second copy of the name is how a reset ends up clearing something nothing reads.
+    //
+    // The "2" retires every save written while the shelf had six cards. Slot 4 came free back
+    // then, so those saves already have its digit set -- and slot 4 is now the fish you pay for.
+    // Trusting them would hand it over for nothing. Coins are a separate key and are untouched.
+    public const string OWNED_KEY = "FishOwned2";
 
     // Public because PlayerController reads this to pick the in-game fish. It's written down once,
     // here, rather than typed as text into two different files — which is how two files end up
@@ -114,10 +121,10 @@ public class FishInventory : MonoBehaviour
         {
             GameManager.Instance.BuildWalletCounter(walletText);
 
-            // The text box hangs from its top-right corner, so shrinking it to fit its text is
-            // what keeps the digits pinned neatly to the edge of the frame. A fixed 300-wide box
-            // with the text on the left instead left a gap that got bigger as your coin total
-            // got shorter.
+            // The text box is centred on the frame and shrinks to fit its own text, so the digits
+            // stay centred however long the number gets. A fixed 300-wide box would leave the
+            // text sitting wherever it landed inside that box, drifting off centre as your coin
+            // total got shorter.
             ContentSizeFitter fitter = walletText.GetComponent<ContentSizeFitter>();
             if (fitter == null) fitter = walletText.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
