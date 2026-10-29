@@ -176,7 +176,7 @@ each other, so they are kept together in one folder.
 | `docs/SHOP-AGENDA.md` | What is still open on the fish shop. |
 | `docs/SESSION-LOG-2026-10-12_13.md` | What was done on those days, and why. |
 | `docs/SESSION-LOG-2026-10-14_15.md` | The same, for the following sessions. |
-| `docs/SESSION-LOG-2026-10-26_29.md` | The same again — swim tuning, the repo, Android settings, the failed APK build and the pause menu. |
+| `docs/SESSION-LOG-2026-10-26_30.md` | The same again — swim tuning, the repo, Android settings, the failed APK build, the pause menu and the fish shop. |
 | `docs/PRESENTATION.md` | Source text for the course presentation deck. |
 
 `CLAUDE.md` and `AGENTS.md` sit in the root rather than in `docs/` because AI
