@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private TMP_Text gameOverText;
     [SerializeField] private GameObject player;
-    [SerializeField] private ObstacleSpawner obstacleSpawner;
+    [SerializeField] private CaveSpawner obstacleSpawner;
     [SerializeField] private TMP_Text scoreTextCounter;
 
     [Header("Game over screen")]

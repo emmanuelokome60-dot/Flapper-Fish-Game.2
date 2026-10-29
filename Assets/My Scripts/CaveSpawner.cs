@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 
 // Builds the cave: two never-ending rows of rocks, one hanging down from the ceiling and one
 // standing up from the floor. It always leaves an opening big enough for the fish to swim through.
-public class ObstacleSpawner : MonoBehaviour
+public class CaveSpawner : MonoBehaviour
 {
     [Header("Rocks")]
     [Tooltip("The rocks to pick from. Each one is drawn hanging downwards; the floor rocks are " +
@@ -100,7 +100,7 @@ public class ObstacleSpawner : MonoBehaviour
         // and that's how you end up shipping a cave nobody can fit through that looks deliberate.
         if (deepGap < ABSOLUTE_MIN_GAP)
         {
-            Debug.LogWarning("ObstacleSpawner: Deep Gap " + deepGap + " is below the "
+            Debug.LogWarning("CaveSpawner: Deep Gap " + deepGap + " is below the "
                              + ABSOLUTE_MIN_GAP + " the fish needs, and is being clamped to it. "
                              + "Lower TrashSpawner's Surge Strength instead.", this);
         }
@@ -314,7 +314,7 @@ public class ObstacleSpawner : MonoBehaviour
     {
         if (rockPrefabsArray == null || rockPrefabsArray.Length == 0)
         {
-            Debug.LogError("ObstacleSpawner: Rock Prefabs is empty. Drag the rock prefabs into it on SpawnObstacles.", this);
+            Debug.LogError("CaveSpawner: Rock Prefabs is empty. Drag the rock prefabs into it on SpawnObstacles.", this);
             return false;
         }
 
@@ -323,7 +323,7 @@ public class ObstacleSpawner : MonoBehaviour
             SpriteRenderer renderer = prefab != null ? prefab.GetComponent<SpriteRenderer>() : null;
             if (renderer == null || renderer.sprite == null)
             {
-                Debug.LogError("ObstacleSpawner: a Rock Prefabs slot is empty, has no Sprite Renderer, or has no sprite in it.", this);
+                Debug.LogError("CaveSpawner: a Rock Prefabs slot is empty, has no Sprite Renderer, or has no sprite in it.", this);
                 return false;
             }
         }

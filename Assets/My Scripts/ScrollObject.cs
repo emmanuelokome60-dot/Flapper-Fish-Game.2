@@ -38,7 +38,7 @@ public class ScrollObject : MonoBehaviour
     // perfectly still leave a hairline crack wherever the join lands between two pixels. Neither
     // picture quite fills that column, so the camera's background colour — a light blue-grey,
     // much brighter than the cave — flashes through the crack. Overlapping them hides it.
-    // ObstacleSpawner already does the same thing with rocks for the same reason.
+    // CaveSpawner already does the same thing with rocks for the same reason.
     // ponytail: 0.02 units is about 2px at 1080p. Raise it if a line ever shows on a sharper screen.
     private const float SEAM_OVERLAP = 0.02f;
 

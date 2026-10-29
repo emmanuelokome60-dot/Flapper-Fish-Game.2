@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 //
 // It's also in charge of making the WHOLE game harder as the run goes on: the longer you survive,
 // the faster everything slides past and the more often rubbish turns up.
-[RequireComponent(typeof(ObstacleSpawner))]
+[RequireComponent(typeof(CaveSpawner))]
 public class TrashSpawner : MonoBehaviour
 {
     [Header("Debris")]
@@ -85,7 +85,7 @@ public class TrashSpawner : MonoBehaviour
     private const float SPAWN_MARGIN = 1f;
 
     private readonly List<GameObject> livePieces = new List<GameObject>();
-    private ObstacleSpawner rockSpawner;
+    private CaveSpawner rockSpawner;
     private float elapsed;
     private float nextSpawn;
     private int lastIndex = -1;
@@ -94,7 +94,7 @@ public class TrashSpawner : MonoBehaviour
     // - Finds the rock spawner on this same object. It owns the gap that rubbish has to land in.
     private void Awake()
     {
-        rockSpawner = GetComponent<ObstacleSpawner>();
+        rockSpawner = GetComponent<CaveSpawner>();
     }
 
     // - Starts dropping rubbish for a new run, after putting the difficulty back to the start.

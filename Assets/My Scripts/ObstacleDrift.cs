@@ -24,7 +24,7 @@ public class ObstacleDrift : MonoBehaviour
 
     // Filled in by ConfigureCurrent(). If no spawner was handed over, this piece ignores the
     // current and just bobs about.
-    private ObstacleSpawner rockSpawner;
+    private CaveSpawner rockSpawner;
     private float currentPush;
     private float pieceRadius;
     private float wallGap;
@@ -41,7 +41,7 @@ public class ObstacleDrift : MonoBehaviour
 
     // - Signs this piece up to be carried along by the current, faster than the cave moves.
     // - If nobody calls this, the piece just stays put relative to the walls and bobs.
-    public void ConfigureCurrent(ObstacleSpawner rocks, float push, float radius, float wallGap = 0f)
+    public void ConfigureCurrent(CaveSpawner rocks, float push, float radius, float wallGap = 0f)
     {
         rockSpawner = rocks;
         currentPush = push;

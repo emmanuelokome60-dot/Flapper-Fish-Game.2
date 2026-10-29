@@ -8,9 +8,9 @@ using UnityEngine;
 // them up too, two scripts would be fighting over the same number. The only thing that speeds up
 // here is how OFTEN coins appear.
 //
-// It sits on the same object as ObstacleSpawner, so when the game clears out the old rocks it
+// It sits on the same object as CaveSpawner, so when the game clears out the old rocks it
 // clears out the old coins at the same time.
-[RequireComponent(typeof(ObstacleSpawner))]
+[RequireComponent(typeof(CaveSpawner))]
 public class CoinSpawner : MonoBehaviour
 {
     [Header("Coin")]
@@ -68,7 +68,7 @@ public class CoinSpawner : MonoBehaviour
     private const float SPAWN_MARGIN = 1f;
 
     private readonly List<GameObject> liveCoins = new List<GameObject>();
-    private ObstacleSpawner rockSpawner;
+    private CaveSpawner rockSpawner;
     private float elapsed;
     private float nextSpawn;
     private bool spawning;
@@ -77,7 +77,7 @@ public class CoinSpawner : MonoBehaviour
     //   between the top and bottom rocks is, which is where coins have to go.
     private void Awake()
     {
-        rockSpawner = GetComponent<ObstacleSpawner>();
+        rockSpawner = GetComponent<CaveSpawner>();
     }
 
     // - Starts dropping coins for a new run, forgetting anything left over from the last one.

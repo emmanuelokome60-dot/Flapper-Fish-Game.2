@@ -113,7 +113,7 @@ from 0 to 1. The cave light dims on it *and* the gap between the rocks narrows
 on it. One signal the player reads, rather than two systems to balance against
 each other.
 
-**The cave builds itself ahead of you.** `ObstacleSpawner` keeps two rows of
+**The cave builds itself ahead of you.** `CaveSpawner` keeps two rows of
 rocks filled out past the right edge, each rock measured against the opposite
 row so the gap never closes up. Spawners ask it where the gap is before
 dropping anything into the cave.
@@ -123,7 +123,7 @@ dropping anything into the cave.
 | `GameManager` | Menus, runs, score, coins, sound, cave lighting |
 | `PlayerController` | The fish: input, swimming, tilt, skins |
 | `PlayerHit` | Ends the run — a bump, or sinking off screen |
-| `ObstacleSpawner` | Builds the two rock walls and owns the gap |
+| `CaveSpawner` | Builds the two rock walls and owns the gap |
 | `ObstacleMovement` | Slides one object left, then deletes it |
 | `TrashSpawner` | Drops trash, and drives the whole difficulty curve |
 | `CoinSpawner` / `CoinPickup` | Drops and collects coins |
