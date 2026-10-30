@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-// Ends the run. Two ways to die: bump into something, or sink off the bottom of the screen.
+// Ends the run. Two ways to die: bump into something, or sink off the
+// bottom of the screen.
 public class PlayerHit : MonoBehaviour
 {
     [Tooltip("How far below the screen the fish has to sink before the run ends.")]
@@ -15,8 +16,9 @@ public class PlayerHit : MonoBehaviour
         mainCamera = Camera.main;
     }
 
-    // There is no floor in this game, so without this check a fish that fell off the bottom would
-    // keep falling forever and the run would never end.
+    // Watches for the fish sinking off the bottom.
+    // There is no floor, so without this it would fall forever and the
+    // run would never end.
     private void Update()
     {
         if (Time.timeScale == 0f) return;
@@ -30,12 +32,13 @@ public class PlayerHit : MonoBehaviour
         }
     }
 
+    // The fish bumped a rock or a piece of rubbish.
     private void OnCollisionEnter2D(Collision2D collision)
     {
         EndRun();
     }
 
-    // Both ways of dying come through here, so a run can only ever end one way
+    // Both ways of dying come through here, so a run ends one way only.
     private void EndRun()
     {
         if (GameManager.Instance == null) return;

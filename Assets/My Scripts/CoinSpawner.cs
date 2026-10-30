@@ -2,14 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Drops coins into the gap between the rocks for the fish to collect.
-//
-// This script does NOT speed the coins up as the run goes on. Coins get an ObstacleMovement, which
-// already reads the one shared cave speed that TrashSpawner is in charge of. If this script sped
-// them up too, two scripts would be fighting over the same number. The only thing that speeds up
-// here is how OFTEN coins appear.
-//
-// It sits on the same object as CaveSpawner, so when the game clears out the old rocks it
-// clears out the old coins at the same time.
+// It does NOT speed coins up: they carry an ObstacleMovement that reads
+// the one shared cave speed. Only how OFTEN they appear changes here.
+// Sits on the same object as CaveSpawner, so clearing the rocks clears
+// the coins at the same time.
 [RequireComponent(typeof(CaveSpawner))]
 public class CoinSpawner : MonoBehaviour
 {
@@ -52,7 +48,7 @@ public class CoinSpawner : MonoBehaviour
     [Tooltip("How much faster than the cave coins drift. 0 locks them to the rocks.")]
     [SerializeField] private float coinCurrentPush = 1.2f;
 
-    // Lets the score display use the same coin picture without needing its own Inspector slot
+    // Lets the coin counter use the same picture with no extra slot.
     public Sprite CoinSprite
     {
         get
@@ -64,7 +60,8 @@ public class CoinSpawner : MonoBehaviour
         }
     }
 
-    // Coins are made this far past the right edge, so you never see one pop into existence
+    // Coins are made this far past the right edge, so you never see one
+    // pop into existence.
     private const float SPAWN_MARGIN = 1f;
 
     private readonly List<GameObject> liveCoins = new List<GameObject>();
@@ -73,16 +70,16 @@ public class CoinSpawner : MonoBehaviour
     private float nextSpawn;
     private bool spawning;
 
-    // - Finds the rock spawner on this same object. It's the only thing that knows where the gap
-    //   between the top and bottom rocks is, which is where coins have to go.
+    // Finds the rock spawner, the only thing that knows where the gap
+    // between the walls is, which is where coins have to go.
     private void Awake()
     {
         rockSpawner = GetComponent<CaveSpawner>();
     }
 
-    // - Starts dropping coins for a new run, forgetting anything left over from the last one.
-    // - If the coin is set up wrong it just doesn't start, so you get a run with no coins instead
-    //   of an error message once every frame.
+    // Starts dropping coins for a new run.
+    // A coin set up wrong just does not start, so you get a run with no
+    // coins instead of an error every frame.
     public void StartSpawning()
     {
         liveCoins.Clear();
@@ -94,27 +91,26 @@ public class CoinSpawner : MonoBehaviour
         spawning = true;
     }
 
-    // - Stops dropping new coins. The ones already out there get cleared by GameManager.
+    // Stops dropping new coins. GameManager clears the rest.
     public void StopSpawning()
     {
         spawning = false;
     }
 
-    // - Counts down to the next coin and drops one when the timer runs out. The wait gets shorter
-    //   as the run goes on.
-    // - Skips dropping anything while the screen already has as many coins as it's allowed.
+    // Counts down to the next coin and drops one when the timer runs
+    // out. The wait gets shorter as the run goes on.
     private void Update()
     {
         if (!spawning) return;
 
         elapsed += Time.deltaTime;
 
-        // Coins that got collected or slid off screen leave empty holes in the list, so clear them
+        // Collected coins leave holes in the list, so clear them.
         liveCoins.RemoveAll(coin => coin == null);
 
         if (elapsed < nextSpawn) return;
 
-        // Counts from 0 to 1 over rampSeconds, then stops at 1 and stays there
+        // 0 to 1 over rampSeconds, then stays at 1.
         float progress = rampSeconds > 0f ? Mathf.Clamp01(elapsed / rampSeconds) : 1f;
         nextSpawn = elapsed + Mathf.Lerp(startInterval, minInterval, progress);
 
@@ -123,19 +119,19 @@ public class CoinSpawner : MonoBehaviour
         SpawnCoin();
     }
 
-    // - Puts one coin just past the right edge, somewhere inside the clear gap between the rocks.
-    // - Quietly gives up if the rocks haven't been built that far ahead yet, or if the gap is too
-    //   narrow to fit the coin plus the room it needs to float about in.
+    // Puts one coin just off the right edge, inside the clear gap.
+    // Gives up quietly if the rocks are not built that far yet, or the
+    // gap is too narrow for the coin plus its room to float.
     private void SpawnCoin()
     {
         Vector2 spriteSize = coinPrefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
         float scale = coinSize / Mathf.Max(spriteSize.x, spriteSize.y);
 
-        // A coin spins while it floats, so the space it needs is its corner-to-corner length,
-        // not its width
+        // A coin spins while it floats, so it needs its corner-to-corner
+        // length, not its width.
         float radius = new Vector2(spriteSize.x, spriteSize.y).magnitude * scale * 0.5f;
 
-        // The coin itself, plus however far it might wander, plus the gap we want to still see
+        // The coin, plus how far it may wander, plus the gap to keep.
         float clearance = radius + driftY + wallGap;
 
         float x = CameraEdges.Right + SPAWN_MARGIN;
@@ -146,8 +142,7 @@ public class CoinSpawner : MonoBehaviour
         coin.transform.position = new Vector3(x, Random.Range(low + clearance, high - clearance), 0f);
         coin.transform.localScale = new Vector3(scale, scale, 1f);
 
-        // The coin already comes with its trigger collider and draw order set, so we leave those
-        // alone. This makes it slide along with the cave, and lets the restart clean-up find it.
+        // Makes it slide with the cave, and lets restart clean-up find it.
         coin.AddComponent<ObstacleMovement>();
 
         if (spinDegrees > 0f)
@@ -163,10 +158,9 @@ public class CoinSpawner : MonoBehaviour
         liveCoins.Add(coin);
     }
 
-    // - Checks the coin is actually usable before the run starts.
-    // - We check the picture too, not just the object, because SpawnCoin measures the picture to
-    //   work out the size. Without this check it would crash on the very first coin instead of
-    //   telling you clearly what's wrong, here, up front.
+    // Checks the coin is usable before the run starts.
+    // The picture too, because SpawnCoin measures it: without this it
+    // would crash on the first coin instead of saying what is wrong.
     private bool HasValidCoin()
     {
         if (coinPrefab == null)

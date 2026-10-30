@@ -3,9 +3,8 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 // Drops floating rubbish for the fish to dodge.
-//
-// It's also in charge of making the WHOLE game harder as the run goes on: the longer you survive,
-// the faster everything slides past and the more often rubbish turns up.
+// Also in charge of making the WHOLE game harder as the run goes on: the
+// longer you last, the faster the cave moves and the more rubbish comes.
 [RequireComponent(typeof(CaveSpawner))]
 public class TrashSpawner : MonoBehaviour
 {
@@ -35,9 +34,8 @@ public class TrashSpawner : MonoBehaviour
              "harder after this.")]
     [SerializeField] private float rampSeconds = 90f;
 
-    // This also decides how long the fish swims through empty water before the first rocks show
-    // up. There's about 8.8 units of empty space with the fish in the middle of the screen, so the
-    // wait is 8.8 divided by this speed: about 1.5s on a normal screen, 1.9s on a tall phone.
+    // This also sets how long you swim through empty water before the
+    // first rocks: about 8.8 units of space divided by this speed.
     [Tooltip("How fast things slide past at the START of a run, as a multiple of the rocks' own " +
              "speed of 5. Turning this up means less empty swimming before the first rocks.")]
     [SerializeField] private float startSpeedMultiplier = 1.15f;
@@ -56,8 +54,8 @@ public class TrashSpawner : MonoBehaviour
     [SerializeField] private int maxOnScreen = 8;
 
     [Header("Currents")]
-    // Be careful going above 1.4. By full difficulty the cave is already moving at 8 units a
-    // second, and a surge cuts your thinking time by the same amount it adds to the speed.
+    // Careful above 1.4. By full difficulty the cave already moves at 8
+    // a second, and a surge cuts your thinking time as much as it adds.
     [Tooltip("How strong a surge gets at FULL difficulty, as a multiple of the current speed. " +
              "It builds up from 1 over Ramp Seconds, so early surges are gentler. 1 = no currents.")]
     [SerializeField] private float surgeStrength = 1.3f;
@@ -72,16 +70,17 @@ public class TrashSpawner : MonoBehaviour
     [Tooltip("How much faster than the cave the rubbish drifts. 0 locks it to the rocks.")]
     [SerializeField] private float debrisCurrentPush = 1.2f;
 
-    // Still water: the cave at its normal speed with no surge on top. Both of these are
-    // multipliers, and multiplying by 1 changes nothing — so they're fixed, not something to tune.
+    // Still water. Both are multipliers, and multiplying by 1 changes
+    // nothing, so they are fixed rather than something to tune.
     private const float CALM_PACE = 1f;
     private const float CALM_SURGE = 1f;
 
-    // How much of the full Surge Strength the earliest surges get, before the difficulty has
-    // built up. Half, so you feel the opening currents but the deep cave is still twice as rough.
+    // How much of the full Surge Strength the earliest surges get. Half,
+    // so you feel them but the deep cave is still twice as rough.
     private const float SURGE_AT_START = 0.5f;
 
-    // Rubbish is made this far past the right edge, so you never see a piece pop into existence
+    // Rubbish is made this far past the right edge, so you never see a
+    // piece pop into existence.
     private const float SPAWN_MARGIN = 1f;
 
     private readonly List<GameObject> livePieces = new List<GameObject>();
@@ -91,13 +90,13 @@ public class TrashSpawner : MonoBehaviour
     private int lastIndex = -1;
     private bool spawning;
 
-    // - Finds the rock spawner on this same object. It owns the gap that rubbish has to land in.
+    // Finds the rock spawner, which owns the gap rubbish lands in.
     private void Awake()
     {
         rockSpawner = GetComponent<CaveSpawner>();
     }
 
-    // - Starts dropping rubbish for a new run, after putting the difficulty back to the start.
+    // Starts dropping rubbish, with the difficulty back at the start.
     public void StartSpawning()
     {
         ResetRun();
@@ -107,9 +106,9 @@ public class TrashSpawner : MonoBehaviour
         spawning = true;
     }
 
-    // - Stops dropping rubbish and puts the cave's speed back to calm.
-    // - The speed is shared by the whole game, so without resetting it here it would survive
-    //   into your next run.
+    // Stops dropping rubbish and puts the cave back to calm.
+    // The speed is shared by the whole game, so without this it would
+    // survive into your next run.
     public void StopSpawning()
     {
         spawning = false;
@@ -117,7 +116,7 @@ public class TrashSpawner : MonoBehaviour
         ObstacleMovement.SetPace(CALM_PACE, CALM_SURGE);
     }
 
-    // - Wipes the run's progress and puts the cave back to its starting speed.
+    // Wipes the run's progress and resets the cave's speed.
     private void ResetRun()
     {
         livePieces.Clear();
@@ -125,26 +124,26 @@ public class TrashSpawner : MonoBehaviour
         lastIndex = -1;
         nextSpawn = startInterval;
 
-        // We reset the surge here as well as the speed. Update() would overwrite it on the very
-        // next frame anyway, but leaving an old surge sitting in something called "the current
-        // surge" is how you end up not trusting either number when you read the code later.
+        // The surge is reset as well as the speed. Update() would
+        // overwrite it next frame, but an old value sitting in something
+        // called "the current surge" makes both numbers untrustworthy.
         ObstacleMovement.SetPace(startSpeedMultiplier, CALM_SURGE);
     }
 
-    // - Runs the whole run's difficulty: winds the cave's speed up to its limit, adds a surge on
-    //   top, and drops rubbish with a shrinking gap between pieces.
-    // - It publishes ONE shared speed, so rocks, rubbish and coins can never get out of step.
+    // Runs the whole difficulty curve: winds the cave's speed up, adds a
+    // surge on top, and drops rubbish with a shrinking gap between it.
+    // Publishes ONE shared speed, so rocks, rubbish and coins stay in step.
     private void Update()
     {
         if (!spawning) return;
 
         elapsed += Time.deltaTime;
 
-        // Counts from 0 to 1 over rampSeconds, then stops at 1 and stays there
+        // 0 to 1 over rampSeconds, then stays at 1.
         float progress = rampSeconds > 0f ? Mathf.Clamp01(elapsed / rampSeconds) : 1f;
         float ramped = Mathf.Lerp(startSpeedMultiplier, maxSpeedMultiplier, progress);
 
-        // The surge sits on top of that, and we publish it separately so the fish feels it too
+        // The surge sits on top, published separately so the fish feels it.
         float surge = Surge(progress);
         ObstacleMovement.SetPace(ramped * surge, surge);
 
@@ -159,10 +158,9 @@ public class TrashSpawner : MonoBehaviour
         SpawnPiece();
     }
 
-    // - Works out how strong the current is right now: a wave passing through the cave.
-    // - Because we multiply the ONE shared speed, the rocks, rubbish and coins all speed up
-    //   together. And because it's worked out purely from the clock, it needs nothing remembered
-    //   between frames.
+    // How strong the current is right now: a wave passing through.
+    // Worked out purely from the clock, so nothing is remembered between
+    // frames, and it multiplies the one shared speed.
     private float Surge(float progress)
     {
         if (surgeStrength <= 1f || surgeSeconds <= 0f || surgeInterval <= 0f) return 1f;
@@ -170,22 +168,21 @@ public class TrashSpawner : MonoBehaviour
         float phase = elapsed % (surgeInterval + surgeSeconds);
         if (phase < surgeInterval) return 1f;
 
-        // The surge grows using the same difficulty counter as the speed: shallow water already
-        // shoves you a bit, the deep cave shoves twice as hard.
-        //
-        // The rubbish gets this for free, because ObstacleDrift multiplies its own push by the
-        // surge. So there's no second number to remember to keep in step with this one.
+        // Grows on the same difficulty counter as the speed: shallow
+        // water shoves a bit, the deep cave shoves twice as hard.
+        // The rubbish gets this free, because ObstacleDrift multiplies
+        // its own push by the surge.
         float strength = Mathf.Lerp(1f + (surgeStrength - 1f) * SURGE_AT_START, surgeStrength, progress);
 
-        // Sin() draws a smooth arch shape, so the surge swells in and fades out instead of
-        // snapping on and off like a switch
+        // Sin() draws a smooth arch, so the surge swells and fades
+        // instead of snapping on and off like a switch.
         float t = (phase - surgeInterval) / surgeSeconds;
         return 1f + (strength - 1f) * Mathf.Sin(t * Mathf.PI);
     }
 
-    // - Drops one piece of rubbish just past the right edge, inside the clear gap in the rocks.
-    // - Gives up if the rocks haven't been built that far ahead yet, or if the gap is too narrow
-    //   to fit the piece plus the room it needs to spin and float about.
+    // Drops one piece just off the right edge, inside the clear gap.
+    // Gives up if the rocks are not built that far yet, or the gap is
+    // too narrow for the piece plus room to spin and float.
     private void SpawnPiece()
     {
         int index = PickTrash(lastIndex);
@@ -194,11 +191,12 @@ public class TrashSpawner : MonoBehaviour
         Vector2 spriteSize = prefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
         float scale = Random.Range(minSize, maxSize) / Mathf.Max(spriteSize.x, spriteSize.y);
 
-        // A piece spins while it floats, so the space it needs is its corner-to-corner length,
-        // not its width
+        // A piece spins while it floats, so it needs its corner-to-corner
+        // length, not its width.
         float radius = new Vector2(spriteSize.x, spriteSize.y).magnitude * scale * 0.5f;
 
-        // The piece itself plus however far it might wander, so it can never end up inside a rock
+        // The piece plus how far it may wander, so it never ends up
+        // inside a rock.
         float clearance = radius + driftY;
 
         float x = CameraEdges.Right + SPAWN_MARGIN;
@@ -209,18 +207,18 @@ public class TrashSpawner : MonoBehaviour
         piece.transform.position = new Vector3(x, Random.Range(low + clearance, high - clearance), 0f);
         piece.transform.localScale = new Vector3(scale, scale, 1f);
 
-        // Drawn in front of the rocks and the fish, so rubbish looks like it's floating in front
-        // of the cave wall rather than stuck inside it
+        // In front of the rocks and the fish, so it floats in front of
+        // the wall rather than looking stuck inside it.
         piece.GetComponent<SpriteRenderer>().sortingOrder = 2;
 
-        // All nine pieces of rubbish already come with a properly fitted collider. This is just a
-        // safety net in case somebody adds a new one and forgets.
+        // Every piece already has a fitted collider. This is a safety net
+        // for a new one added without.
         if (!piece.TryGetComponent(out Collider2D _))
         {
             piece.AddComponent<PolygonCollider2D>();
         }
 
-        // Makes it slide along at the cave's speed, and lets the restart clean-up find it
+        // Makes it slide with the cave, and lets restart clean-up find it.
         piece.AddComponent<ObstacleMovement>();
 
         float spin = Random.Range(minSpin, maxSpin) * (Random.value < 0.5f ? -1f : 1f);
@@ -234,10 +232,9 @@ public class TrashSpawner : MonoBehaviour
         lastIndex = index;
     }
 
-    // - Picks a random piece of rubbish, but never the same one twice in a row.
-    // - It picks from a list one shorter, then skips past the one used last time. That gives every
-    //   other piece an equal chance without having to try again and again until it gets a
-    //   different one.
+    // Picks a random piece, never the same one twice in a row.
+    // Picks from a list one shorter and skips past the last one, so
+    // every other piece is equally likely with no re-rolling.
     private int PickTrash(int lastUsed)
     {
         if (trashPrefabsArray.Length == 1 || lastUsed < 0)
@@ -250,10 +247,9 @@ public class TrashSpawner : MonoBehaviour
         return index;
     }
 
-    // - Checks every piece of rubbish is actually usable before the run starts.
-    // - We check the pictures too, not just the objects, because SpawnPiece measures the picture
-    //   to work out the size. Without this check it would crash on the very first piece instead
-    //   of telling you clearly what's wrong, here, up front.
+    // Checks every piece is usable before the run starts.
+    // The pictures too, because SpawnPiece measures them: without this
+    // it would crash on the first piece instead of saying what is wrong.
     private bool HasValidTrash()
     {
         if (trashPrefabsArray == null || trashPrefabsArray.Length == 0)

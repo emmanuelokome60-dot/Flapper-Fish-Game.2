@@ -1,16 +1,16 @@
 using UnityEngine;
 
 // Goes on every coin, added by CoinSpawner.
-//
-// Coins use "touch" (a trigger), not "bump" (a collision). PlayerHit ends the run on any real
-// bump, so if coins were bumps you would die collecting one.
+// Coins use touch, not bump. PlayerHit ends the run on any real bump,
+// so as bumps you would die collecting one.
 public class CoinPickup : MonoBehaviour
 {
     private bool collected;
 
+    // The fish touched this coin. Pays it in and removes it.
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // Stops one coin paying out twice if the fish overlaps it for two frames
+        // Stops one coin paying twice if the fish overlaps two frames.
         if (collected) return;
 
         if (collision.GetComponent<PlayerController>() == null) return;
