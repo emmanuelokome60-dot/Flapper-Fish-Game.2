@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 // The fish you control. Reads your taps, swims up, sinks down, tilts,
-// and wears whichever skin you picked in the shop.
+// and can wear whichever skin you picked in the shop.
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb;
