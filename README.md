@@ -142,7 +142,7 @@ dropping anything into the cave.
 |---|---|---|
 | Engine | Unity 6000.3.8f1, 2D URP | — |
 | Package | `com.emmanuelokome.abyssalfish` | — |
-| Version | 1.7 (version code 2) | — |
+| Version | 1.8 (version code 2) | — |
 | Min SDK | 25 (Android 7.1) | Covers almost every device still in use |
 | Target SDK | 35 (Android 15) | Meets the Play Store requirement |
 | Architecture | ARM64 only | Required by Play; keeps the APK small |
