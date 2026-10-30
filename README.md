@@ -21,6 +21,9 @@ Made by **ABYSSAL TEAM** for the **EUAS — Mobile Game Development** course.
 
 ## How to play
 
+**Hold your phone sideways.** The cave scrolls from right to left, so the game
+is played in landscape.
+
 | What you do | What happens |
 |---|---|
 | Tap anywhere | The fish swims up |
@@ -144,7 +147,7 @@ dropping anything into the cave.
 | Target SDK | 35 (Android 15) | Meets the Play Store requirement |
 | Architecture | ARM64 only | Required by Play; keeps the APK small |
 | Output | APK | Switch to AAB only if publishing to Play |
-| Orientation | Portrait, 9:16 | — |
+| Orientation | Landscape, 16:9 | The cave scrolls sideways, so a wide screen shows more of it |
 
 ### Working on the scene safely
 
@@ -178,6 +181,7 @@ each other, so they are kept together in one folder.
 | `docs/SESSION-LOG-2026-10-14_15.md` | The same, for the following sessions. |
 | `docs/SESSION-LOG-2026-10-26_30.md` | The same again — swim tuning, the repo, Android settings, the failed APK build, the pause menu and the fish shop. |
 | `docs/PRESENTATION.md` | Source text for the course presentation deck. |
+| `docs/CODE-NOTES.md` | What to say about the code when presenting it. |
 
 `CLAUDE.md` and `AGENTS.md` sit in the root rather than in `docs/` because AI
 coding tools read them from there by name. They hold the project's working rules
