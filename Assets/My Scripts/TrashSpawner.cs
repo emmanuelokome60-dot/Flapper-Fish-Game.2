@@ -70,8 +70,8 @@ public class TrashSpawner : MonoBehaviour
     [Tooltip("How much faster than the cave the rubbish drifts. 0 locks it to the rocks.")]
     [SerializeField] private float debrisCurrentPush = 1.2f;
 
-    // Still water. Both are multipliers, and multiplying by 1 changes
-    // nothing, so they are fixed rather than something to tune.
+    // Still water. Both of these multiply the cave's speed, and
+    // multiplying by 1 leaves it alone, so they are fixed, not tuned.
     private const float CALM_PACE = 1f;
     private const float CALM_SURGE = 1f;
 
@@ -211,8 +211,8 @@ public class TrashSpawner : MonoBehaviour
         // the wall rather than looking stuck inside it.
         piece.GetComponent<SpriteRenderer>().sortingOrder = 2;
 
-        // Every piece already has a fitted collider. This is a safety net
-        // for a new one added without.
+        // A collider is the shape the fish can crash into. Every piece
+        // already has one; this catches a new piece added without.
         if (!piece.TryGetComponent(out Collider2D _))
         {
             piece.AddComponent<PolygonCollider2D>();

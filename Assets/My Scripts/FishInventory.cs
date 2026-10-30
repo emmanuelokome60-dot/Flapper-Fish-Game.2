@@ -46,8 +46,9 @@ public class FishInventory : MonoBehaviour
     // its setup has not run and this reads 0. Read the save instead.
     public int EquippedIndex { get; private set; }
 
-    // Which fish you own, packed into one whole number: one binary digit
-    // per fish. Unity cannot save a list, and separate values would be
+    // One number remembers every fish you own.
+    // Picture a row of light switches, one switch per fish. On means you
+    // own it. Unity cannot save a list, and separate values would be
     // separate chances to update one and forget the others.
     //
     // Public for the same reason as EQUIPPED_KEY. The Tools menu resets

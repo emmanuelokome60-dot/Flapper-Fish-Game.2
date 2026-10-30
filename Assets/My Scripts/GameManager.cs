@@ -51,8 +51,9 @@ public class GameManager : MonoBehaviour
     [Tooltip("Carries on a paused run. Only while paused, never on the game over screen.")]
     [SerializeField] private GameObject resumeButton;
 
-    // New name on purpose, with no [FormerlySerializedAs]. The scene had
-    // the old name saved as 0.6, and a saved value beats the script.
+    // Given a fresh name on purpose, and deliberately not told to pick up
+    // the old one. The scene had the old name saved as 0.6, and a saved
+    // value always beats the script, so a new name is what let 0.78 count.
     [Tooltip("How dark the screen goes behind the pause and game over buttons. 0 = no dimming.")]
     [Range(0f, 1f)]
     [SerializeField] private float pauseDimDarkness = 0.78f;
@@ -138,7 +139,8 @@ public class GameManager : MonoBehaviour
     private const string MUTE_KEY = "Muted";
 
     [Header("Sound")]
-    // FormerlySerializedAs keeps the file you already dragged in.
+    // The line below tells Unity this field used to be called clickClip,
+    // so the sound you already dragged in survives the rename.
     [Tooltip("Played by every button in the game. Assets/Music/buttons click.")]
     [FormerlySerializedAs("clickClip")]
     [SerializeField] private AudioClip buttonClick;
@@ -296,7 +298,8 @@ public class GameManager : MonoBehaviour
     }
 
     // Counts up the metres and darkens the cave as they climb.
-    // deltaTime is 0 while frozen, so every screen stops it for free.
+    // Time stops counting while the game is frozen, so the menu, pause
+    // and game over all stop the counter without a switch of their own.
     private void Update()
     {
         distanceTravelled += unitsPerSecond * ObstacleMovement.SpeedMultiplier * Time.deltaTime;

@@ -85,8 +85,8 @@ public class SpotLight2D : MonoBehaviour
             level = Mathf.Min(level + pulseBoost, peak);
         }
 
-        // deltaTime is 0 while paused, so the flash holds instead of
-        // quietly fading out behind the pause screen.
+        // Time stops counting while paused, so the flash holds instead
+        // of quietly fading out behind the pause screen.
         level = Mathf.Lerp(level, resting, Time.deltaTime * recoverSpeed);
 
         // PerlinNoise, not Random. Random jumps about and looks like a
