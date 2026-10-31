@@ -16,7 +16,7 @@ Every **❓** is something only the team knows. Replace it with one of these:
 | Source | Write it like this |
 |---|---|
 | A team member made it | `Mark` · `Ivo` · `Emmanuel` |
-| An AI tool made it | `AI — <tool name>` (the Terms say some art was AI-made) |
+| An AI tool made it | `AI — <Claude AI>` (the Terms say some art was AI-made) |
 | Downloaded or bought | the site and a link, e.g. `itch.io — <pack name> — <link>` |
 
 Then write the licence: `Own work`, `CC0`, `CC BY 4.0`, `Paid asset licence`,
