@@ -193,3 +193,6 @@ and are identical to each other.
 
 No licence granted. This is coursework, shared so it can be read and marked.
 Please do not redistribute it as your own.
+
+The art, sounds and fonts are listed in [`CREDITS.md`](CREDITS.md), with where
+each one came from.
