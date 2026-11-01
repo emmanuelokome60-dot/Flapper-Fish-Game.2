@@ -1,8 +1,8 @@
 TERMS OF USE - ABYSSAL FISH
 
-Last updated: [10/23/2026]
-Made by: [ABYSSAL TEAM]
-Contact: [EMAIL]
+Last updated: 1 November 2026
+Made by: Abyssal Team
+Contact: https://abyssalfishteam.itch.io/abyssal-fish (page comments)
 
 Please read this before playing. By installing or playing Abyssal Fish you
 accept everything written here. If you do not accept it, do not play, and
@@ -12,7 +12,7 @@ uninstall the game.
 1. WHAT THIS IS
 
 Abyssal Fish is a student project. It was made by students as schoolwork for
-[EUAS / MOBILE GAME DEVELOPMENT COURSE].
+the Mobile Game Development course at EUAS.
 
 We are not a company. We are not a game studio. We are not professional
 programmers, designers, artists, testers or sound engineers. Nobody was paid
@@ -113,8 +113,8 @@ The game is built with the Unity engine and uses third-party packages, fonts,
 sounds and art assets. Those remain the property of their owners and are used
 under their own licences. We claim no ownership of them.
 
-If you believe something in this game infringes your rights, contact us at
-[EMAIL] and we will remove it.
+If you believe something in this game infringes your rights, contact us in the comments
+on our itch.io page and we will remove it.
 
 
 10. CHANGES TO THESE TERMS
@@ -125,7 +125,7 @@ is the version that applies to you.
 
 11. LAW
 
-These terms are governed by the laws of [YOUR COUNTRY].
+These terms are governed by the laws of Estonia.
 
 Nothing here is intended to remove any legal right you have that cannot be
 removed by agreement. Some countries do not allow certain warranties or
@@ -136,4 +136,8 @@ still apply.
 
 12. CONTACT
 
-[EMAIL]
+Leave a comment on the game's page:
+https://abyssalfishteam.itch.io/abyssal-fish
+
+We do not publish an email address. The page comments are the way to
+reach us.
