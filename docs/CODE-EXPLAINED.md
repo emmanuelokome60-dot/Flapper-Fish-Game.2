@@ -1072,3 +1072,16 @@ to **8** over **150s**. Surge every **9s** lasting **2.5**. Swim **4.6**, max si
   code later; you are talking to a room.
 - Asked about a number? Say where it lives: **the scene, not the script.**
 - "I would have to check that one" is a complete answer.
+
+---
+
+## About this file
+
+This Markdown file is the source. The Word version is generated from it, so edit
+this one and rebuild:
+
+    python docs/tools/build.py
+
+Every number here was read from `SampleScene.unity`. After tuning anything in
+Unity, run `python docs/tools/check-numbers.py` — it fails if this guide quotes a
+value the game no longer uses.

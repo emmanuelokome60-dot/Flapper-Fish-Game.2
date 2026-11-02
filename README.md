@@ -183,6 +183,34 @@ each other, so they are kept together in one folder.
 | `docs/SESSION-LOG-2026-10-26_30.md` | The same again — swim tuning, the repo, Android settings, the failed APK build, the pause menu and the fish shop. |
 | `docs/PRESENTATION.md` | Source text for the course presentation deck. |
 | `docs/CODE-NOTES.md` | What to say about the code when presenting it. |
+| `docs/CODE-EXPLAINED.md` | Every setting and method in all 18 scripts, in plain English. The source for the `.docx` below — edit this one. |
+| `docs/CODE-EXPLAINED.docx` | The same guide as a Word file, for reading or handing in. Generated; do not edit by hand. |
+| `docs/tools/` | Scripts that build and check `CODE-EXPLAINED`. See below. |
+
+Its numbers are read from `SampleScene.unity`, not from the script defaults,
+because **30** settings disagree between the two. The scene wins, so the scene
+is what the guide quotes.
+
+### Rebuilding the guide
+
+`CODE-EXPLAINED.md` is the source. After editing it, or after tuning anything in
+Unity:
+
+```bash
+npm install -g docx          # once
+python docs/tools/build.py   # .md -> .docx
+```
+
+| Script | What it does |
+|---|---|
+| `docs/tools/build.py` | Rebuilds the `.docx` from the `.md`. Run this one. |
+| `docs/tools/build-code-doc.js` | The Markdown-to-Word converter `build.py` calls. |
+| `docs/tools/check-numbers.py` | Lists every script-vs-scene disagreement and fails if the guide quotes a number the game does not use. Run it after tuning. |
+| `docs/tools/estimate-pages.py` | Estimates the page count, since nothing here can render a `.docx`. |
+
+`build.py` also repacks the file so `[Content_Types].xml` is the first entry in
+the archive. OPC requires that; Word does not care, but **Google Docs refuses
+the file as an unsupported format** without it, and the library writes it last.
 
 `CLAUDE.md` and `AGENTS.md` sit in the root rather than in `docs/` because AI
 coding tools read them from there by name. They hold the project's working rules
