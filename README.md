@@ -177,6 +177,7 @@ each other, so they are kept together in one folder.
 | `docs/DEVLOG.md` | The full history and the reasoning behind every decision. Large. |
 | `docs/CHAT-HANDOFF.md` | A longer catch-up document than START-NEW-CHAT. |
 | `docs/SHOP-AGENDA.md` | What is still open on the fish shop. |
+| `docs/SESSION-LOG-2026-10-09_10.md` | The Canvas groups, the pause blur, the sound buttons and the first cave-darkness pass. Its tuning numbers are superseded. |
 | `docs/SESSION-LOG-2026-10-12_13.md` | What was done on those days, and why. |
 | `docs/SESSION-LOG-2026-10-14_15.md` | The same, for the following sessions. |
 | `docs/SESSION-LOG-2026-10-26_30.md` | The same again — swim tuning, the repo, Android settings, the failed APK build, the pause menu and the fish shop. |

@@ -87,7 +87,7 @@ Every number in here is measured from the project, not estimated.
 
 # Darkness as a difficulty curve
 
-- The cave light drops from 0.30 to 0.12
+- The cave light drops from 0.03 to 0.02
 - The lamp on the fish is the only light you get
 - It brightens as the cave darkens, and flickers
 - Rocks are pure black — measured 0.000 luminance
@@ -98,7 +98,7 @@ Every number in here is measured from the project, not estimated.
 
 # How it is held together
 
-- **18** C# scripts, **1,929** lines
+- **18** C# scripts, **3,163** lines
 - One shared cave speed, owned by one script
 - Rocks, trash and coins all read that same number
 - So nothing can drift out of step with anything else
@@ -121,7 +121,7 @@ Every number in here is measured from the project, not estimated.
 # Protecting an amateur release
 
 - Terms and Privacy shown in-game, before you play
-- **1,340** words, accept or exit
+- **1,399** words, accept or exit
 - States plainly: unfinished, unoptimised, AI-assisted
 - No warranty, no liability for device, data or money
 - Collects nothing — no internet, no accounts, no ads
@@ -135,6 +135,6 @@ Every number in here is measured from the project, not estimated.
 - Fish skins bought with collected coins
 - Tuned on a real phone, not just in the Editor
 - Next: a sixth fish, sprite atlas, wider device testing
-- 9 commits, 20 September to 22 October
+- 30 commits, 20 September to 2 November
 
 > Thanks for listening. Happy to take questions, or hand you a phone.
