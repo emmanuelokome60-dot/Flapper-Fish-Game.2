@@ -8,16 +8,16 @@ using UnityEngine.UI;
 public class FishInventory : MonoBehaviour
 {
     [Header("Shelf")]
-    [Tooltip("The scrolling area's Content object. The things inside it are the fish slots, " +
-             "in the order they appear on the shelf.")]
+    [Tooltip("The Content object inside the scrolling area. Everything in it is a fish slot, in " +
+             "shelf order.")]
     [SerializeField] private Transform content;
 
     [Header("Card art")]
     [Tooltip("The grey card shown for a fish you haven't bought yet.")]
     [SerializeField] private Sprite lockedArt;
 
-    [Tooltip("One card per fish, in the same order as the shelf slots. The first one is yours " +
-             "from the start -- it's the fish the game comes with.")]
+    [Tooltip("One card per fish, in the same order as the shelf slots. The first one is free. " +
+             "That is the fish the game starts you with.")]
     [SerializeField] private Sprite[] fishArt;
 
     [Header("Button art")]

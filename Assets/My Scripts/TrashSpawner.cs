@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 public class TrashSpawner : MonoBehaviour
 {
     [Header("Debris")]
-    [Tooltip("The bits of rubbish to pick from. If one is missing a collider we add one.")]
+    [Tooltip("The bits of rubbish to pick from. If one has no collider, the game adds it.")]
     [FormerlySerializedAs("trashPrefabs")]
     [SerializeField] private GameObject[] trashPrefabsArray;
 
@@ -36,8 +36,8 @@ public class TrashSpawner : MonoBehaviour
 
     // This also sets how long you swim through empty water before the
     // first rocks: about 8.8 units of space divided by this speed.
-    [Tooltip("How fast things slide past at the START of a run, as a multiple of the rocks' own " +
-             "speed of 5. Turning this up means less empty swimming before the first rocks.")]
+    [Tooltip("How fast things slide past at the start of a run, measured against the rocks' own " +
+             "speed of 5. Turn it up for less empty swimming before the first rocks.")]
     [SerializeField] private float startSpeedMultiplier = 1.15f;
 
     [Tooltip("How fast things slide past once it's as hard as it gets. 1.6 turns the rocks' " +
@@ -56,8 +56,9 @@ public class TrashSpawner : MonoBehaviour
     [Header("Currents")]
     // Careful above 1.4. By full difficulty the cave already moves at 8
     // a second, and a surge cuts your thinking time as much as it adds.
-    [Tooltip("How strong a surge gets at FULL difficulty, as a multiple of the current speed. " +
-             "It builds up from 1 over Ramp Seconds, so early surges are gentler. 1 = no currents.")]
+    [Tooltip("How strong a surge gets at full difficulty, measured against the current speed. It " +
+             "builds up over Ramp Seconds, so early surges are gentler. Set it to 1 for no " +
+             "currents.")]
     [SerializeField] private float surgeStrength = 1.3f;
 
     [Tooltip("How many seconds one surge takes to build up and fade away again.")]
@@ -67,7 +68,8 @@ public class TrashSpawner : MonoBehaviour
              "the rhythm and plan around it.")]
     [SerializeField] private float surgeInterval = 9f;
 
-    [Tooltip("How much faster than the cave the rubbish drifts. 0 locks it to the rocks.")]
+    [Tooltip("How much faster than the cave the rubbish drifts. Set it to 0 to lock it to the " +
+             "rocks.")]
     [SerializeField] private float debrisCurrentPush = 1.2f;
 
     // Still water. Both of these multiply the cave's speed, and

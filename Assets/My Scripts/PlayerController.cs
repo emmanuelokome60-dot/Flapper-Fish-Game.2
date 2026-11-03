@@ -9,22 +9,22 @@ public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb;
 
-    [Tooltip("How far up the fish swims on each tap. Lower = smaller hops, finer control.")]
+    [Tooltip("How far up the fish swims on each tap. Lower gives smaller hops and finer control.")]
     [FormerlySerializedAs("_swimForce")]
     [SerializeField] private float swimForce = 4f;
 
     [Header("Underwater Feel")]
-    [Tooltip("How strongly the fish is pulled down. Lower = floatier.")]
+    [Tooltip("How strongly the fish is pulled down. Lower makes it floatier.")]
     [FormerlySerializedAs("_waterGravity")]
     [SerializeField] private float waterGravity = 1.2f;
 
-    [Tooltip("How thick the water feels. Higher = the fish glides and slows down instead of " +
+    [Tooltip("How thick the water feels. Higher makes the fish glide and slow down instead of " +
              "snapping about. This is what stops it feeling like a bird.")]
     [FormerlySerializedAs("_waterDrag")]
     [SerializeField] private float waterDrag = 1f;
 
-    [Tooltip("The fastest the fish is allowed to sink. Keep this low or it drops like a stone " +
-             "and one missed tap costs you half a gap.")]
+    [Tooltip("The fastest the fish is allowed to sink. Keep it low. Otherwise the fish drops like " +
+             "a stone, and one missed tap costs you half a gap.")]
     [FormerlySerializedAs("_maxSinkSpeed")]
     [SerializeField] private float maxSinkSpeed = 4.5f;
 
@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
 
     // The fish settles where these two cancel out, so a current can
     // never drag it off the screen however long it lasts.
-    [Tooltip("How hard the fish swims back to its starting spot. Higher = it gets shoved less.")]
+    [Tooltip("How hard the fish swims back to its starting spot. Higher means less shove.")]
     [FormerlySerializedAs("_currentReturn")]
     [SerializeField] private float currentReturn = 4f;
 
@@ -47,7 +47,7 @@ public class PlayerController : MonoBehaviour
     [FormerlySerializedAs("_maxTiltDown")]
     [SerializeField] private float maxTiltDown = -45f;
 
-    [Tooltip("How quickly the fish swings round to its new angle. Lower = smoother.")]
+    [Tooltip("How quickly the fish swings round to its new angle. Lower is smoother.")]
     [FormerlySerializedAs("_tiltSmoothing")]
     [SerializeField] private float tiltSmoothing = 5f;
 

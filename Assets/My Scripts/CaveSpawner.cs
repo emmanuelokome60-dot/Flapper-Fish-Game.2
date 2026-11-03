@@ -8,32 +8,33 @@ using UnityEngine.Serialization;
 public class CaveSpawner : MonoBehaviour
 {
     [Header("Rocks")]
-    [Tooltip("The rocks to pick from. Each one is drawn hanging downwards; the floor rocks are " +
-             "just the same ones turned upside down.")]
+    [Tooltip("The rocks to pick from. Each one hangs down from the ceiling. The floor rocks are " +
+             "the same ones, turned upside down.")]
     [FormerlySerializedAs("rockPrefabs")]
     [SerializeField] private GameObject[] rockPrefabsArray;
 
     [Header("Space for the fish")]
-    [Tooltip("How big the opening is at the mouth of the cave, where every run begins. The fish " +
-             "is 1.33 tall, and the part that can actually hit things is 1.11.")]
+    [Tooltip("How big the gap is at the cave mouth, where every run starts. The fish is 1.33 " +
+             "tall. The part that can hit things is 1.11.")]
     [SerializeField] private float minGap = 3f;
 
-    [Tooltip("How big the opening is once the cave is at its darkest. Must be SMALLER than Min " +
-             "Gap or the cave never closes in. GameManager's Darkest At Distance sets when.")]
+    [Tooltip("How big the gap is at the darkest part of the cave. Keep it smaller than Min Gap, " +
+             "or the cave never closes in. Darkest At Distance on GameManager decides when.")]
     [SerializeField] private float deepGap = 2.6f;
 
     [Tooltip("Every rock sticks out at least this far, so none of them is a useless little sliver.")]
     [SerializeField] private float minDepth = 2f;
 
-    [Tooltip("How much bigger or smaller a rock can be than the one before it. Lower = smoother, " +
-             "flowing walls. Higher = jagged, jumpy walls.")]
+    [Tooltip("How different a rock can be from the one before it. Lower makes the walls smooth " +
+             "and flowing. Higher makes them jagged and jumpy.")]
     [SerializeField] private float maxDepthChange = 1.2f;
 
     [Tooltip("The height of the top of the Ground. Floor rocks stand on this line.")]
     [SerializeField] private float floorY = -4f;
 
     [Header("Size limits")]
-    [Tooltip("Rocks are stretched to reach the depth they were given. These stop that going silly.")]
+    [Tooltip("Rocks stretch to reach the depth they are given. These two limits stop that going " +
+             "silly.")]
     [SerializeField] private float minScale = 0.35f;
     [SerializeField] private float maxScale = 1.2f;
 

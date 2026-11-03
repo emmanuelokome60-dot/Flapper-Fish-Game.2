@@ -10,8 +10,8 @@ using UnityEngine;
 public class CoinSpawner : MonoBehaviour
 {
     [Header("Coin")]
-    [Tooltip("The coin to copy. Its collider MUST stay set to Is Trigger, or collecting a coin " +
-             "will kill the fish instead.")]
+    [Tooltip("The coin to copy. Its collider has to stay set to Is Trigger. If it does not, " +
+             "collecting a coin kills the fish.")]
     [SerializeField] private GameObject coinPrefab;
 
     [Tooltip("How big a coin is. Keep it smaller than the fish, which is about 1.33.")]
@@ -32,8 +32,8 @@ public class CoinSpawner : MonoBehaviour
     [SerializeField] private float driftMaxSpeed = 0.5f;
 
     [Header("How often")]
-    [Tooltip("How many seconds of play before coins come as fast as they ever will. Should " +
-             "match TrashSpawner.")]
+    [Tooltip("How many seconds before coins come as fast as they ever will. Keep this the same as " +
+             "TrashSpawner.")]
     [SerializeField] private float rampSeconds = 90f;
 
     [Tooltip("Seconds between coins at the start of a run.")]
@@ -45,7 +45,8 @@ public class CoinSpawner : MonoBehaviour
     [Tooltip("Most coins allowed on screen at once. A second limit, on top of the timer above.")]
     [SerializeField] private int maxOnScreen = 5;
 
-    [Tooltip("How much faster than the cave coins drift. 0 locks them to the rocks.")]
+    [Tooltip("How much faster than the cave the coins drift. Set it to 0 to lock them to the " +
+             "rocks.")]
     [SerializeField] private float coinCurrentPush = 1.2f;
 
     // Lets the coin counter use the same picture with no extra slot.

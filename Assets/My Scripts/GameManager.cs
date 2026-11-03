@@ -33,16 +33,17 @@ public class GameManager : MonoBehaviour
     [Tooltip("The home screen. Shown when the game opens, hidden once you press Play.")]
     [SerializeField] private GameObject mainMenu;
 
-    [Tooltip("The fish shop. Opened by the Characters button, over the same dark backdrop the " +
+    [Tooltip("The fish shop. The Characters button opens it, over the same dark backdrop the " +
              "pause screen uses.")]
     [SerializeField] private GameObject charactersMenu;
 
     [Header("Buttons")]
-    [Tooltip("Restarts the run. This is the PAUSE screen's one -- the game over panel has its own.")]
+    [Tooltip("Restarts the run. This is the pause screen's button. The game over panel has its " +
+             "own.")]
     [FormerlySerializedAs("playButton")]
     [SerializeField] private GameObject restartButton;
 
-    [Tooltip("Goes back to the main menu. The pause screen's one, next to that Restart.")]
+    [Tooltip("Goes back to the main menu. This is the pause screen's button, next to Restart.")]
     [SerializeField] private GameObject homeButton;
 
     [Tooltip("Pauses the run. Only visible while you're actually playing.")]
@@ -54,12 +55,13 @@ public class GameManager : MonoBehaviour
     // Given a fresh name on purpose, and deliberately not told to pick up
     // the old one. The scene had the old name saved as 0.6, and a saved
     // value always beats the script, so a new name is what let 0.78 count.
-    [Tooltip("How dark the screen goes behind the pause and game over buttons. 0 = no dimming.")]
+    [Tooltip("How dark the screen goes behind the pause and game over buttons. Set it to 0 for no " +
+             "dimming.")]
     [Range(0f, 1f)]
     [SerializeField] private float pauseDimDarkness = 0.78f;
 
     [Tooltip("How blurry the frozen game goes behind the dark backdrop. Each step halves the " +
-             "sharpness. 0 = not blurry at all.")]
+             "sharpness. Set it to 0 for no blur.")]
     [Range(0, 6)]
     [SerializeField] private int pauseBlurSteps = 4;
 
@@ -81,7 +83,7 @@ public class GameManager : MonoBehaviour
     [Tooltip("Shows your coin total. This keeps climbing across runs and across sessions.")]
     [SerializeField] private TMP_Text coinText;
 
-    [Tooltip("How big the coin picture next to the number is. The number itself is 90.")]
+    [Tooltip("How big the coin picture beside the number is. The number itself is 90.")]
     [SerializeField] private float coinIconSize = 80f;
 
     // Kept inside the text box so it can never fall off the screen.
@@ -118,7 +120,8 @@ public class GameManager : MonoBehaviour
     [Header("Player")]
     // New name on purpose. The old field held 1.9 as a distance, this one
     // holds a fraction, so carrying it over threw the fish off screen.
-    [Tooltip("Where the fish starts, as a fraction of the way across the screen. 0.5 = middle.")]
+    [Tooltip("Where the fish starts, as a fraction of the way across the screen. 0.5 is the " +
+             "middle.")]
     [Range(0f, 1f)]
     [SerializeField] private float startFractionFromLeft = 0.5f;
 

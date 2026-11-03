@@ -6,8 +6,8 @@ using UnityEngine.Rendering.Universal;
 // so it looks alive, and flashes each time you swim.
 public class SpotLight2D : MonoBehaviour
 {
-    [Tooltip("How much brighter the bulb sits once the cave is at its darkest. This multiplies " +
-             "the Intensity you set on the Light 2D. 1 means depth changes nothing.")]
+    [Tooltip("How much brighter the bulb gets at the darkest part of the cave. It multiplies the " +
+             "Intensity you set on the Light 2D. Set it to 1 and depth changes nothing.")]
     [Min(0f)]
     [SerializeField] private float deepMultiplier = 1.6f;
 
