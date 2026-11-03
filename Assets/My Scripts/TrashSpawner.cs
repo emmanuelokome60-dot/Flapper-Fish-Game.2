@@ -68,8 +68,8 @@ public class TrashSpawner : MonoBehaviour
              "the rhythm and plan around it.")]
     [SerializeField] private float surgeInterval = 9f;
 
-    [Tooltip("How much faster than the cave the rubbish drifts. Set it to 0 to lock it to the " +
-             "rocks.")]
+    [Tooltip("How much faster than the cave a surge sweeps the rubbish at the fish. Set it to 0 " +
+             "to lock it to the rocks.")]
     [SerializeField] private float debrisCurrentPush = 1.2f;
 
     // Still water. Both of these multiply the cave's speed, and

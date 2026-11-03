@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxSinkSpeed = 4.5f;
 
     [Header("Current")]
-    [Tooltip("How hard a surge shoves the fish backwards. 0 turns currents off.")]
+    [Tooltip("How hard a surge shoves the fish back towards the left edge. 0 turns currents off.")]
     [FormerlySerializedAs("_currentPush")]
     [SerializeField] private float currentPush = 3f;
 

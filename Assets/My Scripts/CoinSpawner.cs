@@ -45,8 +45,8 @@ public class CoinSpawner : MonoBehaviour
     [Tooltip("Most coins allowed on screen at once. A second limit, on top of the timer above.")]
     [SerializeField] private int maxOnScreen = 5;
 
-    [Tooltip("How much faster than the cave the coins drift. Set it to 0 to lock them to the " +
-             "rocks.")]
+    [Tooltip("How much faster than the cave a surge sweeps the coins at the fish. Set it to 0 to " +
+             "lock them to the rocks.")]
     [SerializeField] private float coinCurrentPush = 1.2f;
 
     // Lets the coin counter use the same picture with no extra slot.
