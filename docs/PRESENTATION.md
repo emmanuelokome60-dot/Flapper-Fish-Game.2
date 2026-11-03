@@ -76,7 +76,7 @@ Every number in here is measured from the project, not estimated.
 
 # Currents: the part that is not a bird game
 
-- A surge every **9** seconds, swelling over 2.5
+- A surge every **11.5** seconds: 9 calm, then 2.5 of push
 - It speeds the whole cave AND shoves the fish back
 - Measured it: only 0.23 units of shove
 - The fish is 1.09 wide — a fifth of a body

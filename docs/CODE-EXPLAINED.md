@@ -678,8 +678,8 @@ Four values are fixed in the code: `CALM_PACE` 1, `CALM_SURGE` 1,
 which is the list of rubbish pieces to pick from.
 
 > **If you are asked "why is the surge interval never random?"** So that you can
-> learn the rhythm and plan around it. A random shove is just bad luck. One every
-> 9 seconds is something a player can get good at.
+> learn the rhythm and plan around it. A random shove is just bad luck. One on a
+> fixed 11.5-second beat is something a player can get good at.
 
 **`Update()` — line 136.** This is the difficulty curve itself:
 
@@ -1361,7 +1361,8 @@ metres**.
 
 The speed runs from **4.5** up to **8** over **150 seconds**.
 
-A surge comes every **9 seconds** and lasts **2.5**.
+A surge comes every **11.5 seconds**: **9** seconds of calm water, then a push
+lasting **2.5**.
 
 A swim is worth **4.6**, and the fastest sink is **3.2**.
 
