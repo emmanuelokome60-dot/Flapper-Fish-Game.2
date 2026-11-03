@@ -197,7 +197,7 @@ ones you type in.
 A **method** is a named block of instructions. Something calls it by name, and
 the instructions inside it run.
 
-**`Awake()` — line 197.** This one runs once, right at the very beginning. It
+**`Awake()` — line 200.** This one runs once, right at the very beginning. It
 loads your save, sets up the sound, and draws the coin picture. It also does this,
 which is a real bug fix:
 
@@ -213,7 +213,7 @@ across the top. It was quietly eating every tap that landed on it, and the fish
 did not move. A counter is not a button, so these two lines tell it to stop
 catching taps.
 
-**`Update()` — line 303.** `Update()` is a special name in Unity: whatever is
+**`Update()` — line 306.** `Update()` is a special name in Unity: whatever is
 inside it runs every single frame, about 60 times a second. This one counts the
 metres and dims the cave.
 
@@ -236,7 +236,7 @@ And notice there is **no check for whether the game is paused**. It does not nee
 one. `Time.deltaTime` stops counting while the game is frozen, so the menu, the
 pause screen and the game over screen all stop the counter for free.
 
-**`ApplyCaveDepth()` — line 666.** Five lines long, and the darkness of the whole
+**`ApplyCaveDepth()` — line 669.** Five lines long, and the darkness of the whole
 game lives in here.
 
 ```csharp
@@ -259,7 +259,7 @@ missing cave light.** So even if the cave light was never wired up, the fish's
 lamp still knows how deep you are. Checking first would have quietly broken the
 lamp as well.
 
-**`GameOver()` — line 318.** Freezes everything, saves a new best score if you
+**`GameOver()` — line 321.** Freezes everything, saves a new best score if you
 beat it, and shows the end panel.
 
 It opens with `if (isGameOver) return;`. That is called a **guard**: a quick check
@@ -272,14 +272,14 @@ It also calls `PlayerPrefs.Save()`, which writes your save to the phone right
 away rather than waiting. A phone can be closed without shutting down properly,
 and we did not want to lose a new best score to that.
 
-**`TrySpendCoins(int amount)` — line 607.** This is how you buy a fish. The
+**`TrySpendCoins(int amount)` — line 610.** This is how you buy a fish. The
 important thing is that checking you can afford it and taking the coins happen in
 **one step**. If they were two separate methods, somebody could one day write
 code that took the coins but forgot to check, or checked but forgot to take them,
 and hand out a free fish. It hands back `true` or `false` so the shop knows
 whether the sale went through.
 
-**`BuildSound()` — line 482.** This is why every button in the game clicks,
+**`BuildSound()` — line 485.** This is why every button in the game clicks,
 without anyone wiring up 20 buttons by hand:
 
 ```csharp
@@ -291,7 +291,7 @@ It finds every button and gives each one a click sound. The `true` in there mean
 "include the switched-off ones too". The shop shelf is switched off when the game
 loads, so without that one word the shop's buttons would all be silent.
 
-**`StartGame()` — line 355.** Unfreezes the game, puts the fish and the counters
+**`StartGame()` — line 358.** Unfreezes the game, puts the fish and the counters
 back to the start, and starts the spawners.
 
 It only plays the music **if it is not already playing**. This matters: telling
@@ -302,27 +302,27 @@ without that check, a player who kept retrying would never hear past the intro.
 
 | Method | Line | What it does in the game |
 |---|---|---|
-| `Start()` | 238 | Opens the game on the menu, frozen, with the terms on top. |
-| `BuildLegalButton()` | 257 | Makes the Terms and Privacy button in the bottom right. |
-| `TogglePause()` | 388 | Setting `Time.timeScale = 0f` *is* the entire pause. |
-| `BackToMenu()` | 401 | Back to the menu, frozen. **The only place in the game music ever stops.** |
-| `PlayerStart()` | 436 | Works out the fish's starting spot as a share of the screen width. |
-| `ShowRunButtons()` | 444 | Shows and hides the buttons on the pause screen. |
-| `ShowPauseDim()` | 467 | Turns the dark blurry backdrop on or off. |
-| `PreloadClips()` | 519 | Loads the sounds up front, so the first one played does not stutter. |
-| `PlayClick()` / `PlayMovementPop()` | 529 / 535 | The button click, and the swim pop. |
-| `ToggleSound()` / `ApplySound()` | 542 / 554 | Mutes the game, saves that, and swaps **both** buttons' pictures. |
-| `CanvasRoot()` | 568 | Finds the Canvas by walking **up** the tree of objects. |
-| `OnDestroy()` | 575 | Hands the blur's memory back. It is not freed automatically. |
-| `ClearObstacles()` | 581 | Deletes every rock, coin and piece of rubbish still lying around. |
-| `AddCoin()` | 590 | Adds one to this run, one to your total, saves, and plays the ping. The sound lives **here** rather than in `CoinPickup`, so a coin you touch as you die stays silent. |
-| `ShowCharacters()` | 623 | Opens and closes the shop. It calls `ApplySkin()`, because closing the shop goes through neither `StartGame` nor `BackToMenu`. |
-| `ResetDistance()` / `ResetCoins()` | 645 / 688 | Back to zero. The coins here are this run's only. |
-| `ShowDistance()` / `ShowCoins()` | 657 / 696 | **The one and only place** each of those numbers is written to the screen. |
-| `ShowGameOver()` | 678 | Fills in the three numbers on the end screen. |
-| `BuildCoinIcon()` | 708 | Puts a coin picture to the left of a number. It also sets `raycastTarget = false`. |
-| `BuildWalletCounter()` | 742 | The shop's coin total, built at the same size and with the same picture as the in-game one. |
-| `ShowRunCounters()` | 752 | Shows and hides both counters **together**. |
+| `Start()` | 241 | Opens the game on the menu, frozen, with the terms on top. |
+| `BuildLegalButton()` | 260 | Makes the Terms and Privacy button in the bottom right. |
+| `TogglePause()` | 391 | Setting `Time.timeScale = 0f` *is* the entire pause. |
+| `BackToMenu()` | 404 | Back to the menu, frozen. **The only place in the game music ever stops.** |
+| `PlayerStart()` | 439 | Works out the fish's starting spot as a share of the screen width. |
+| `ShowRunButtons()` | 447 | Shows and hides the buttons on the pause screen. |
+| `ShowPauseDim()` | 470 | Turns the dark blurry backdrop on or off. |
+| `PreloadClips()` | 522 | Loads the sounds up front, so the first one played does not stutter. |
+| `PlayClick()` / `PlayMovementPop()` | 532 / 538 | The button click, and the swim pop. |
+| `ToggleSound()` / `ApplySound()` | 545 / 557 | Mutes the game, saves that, and swaps **both** buttons' pictures. |
+| `CanvasRoot()` | 571 | Finds the Canvas by walking **up** the tree of objects. |
+| `OnDestroy()` | 578 | Hands the blur's memory back. It is not freed automatically. |
+| `ClearObstacles()` | 584 | Deletes every rock, coin and piece of rubbish still lying around. |
+| `AddCoin()` | 593 | Adds one to this run, one to your total, saves, and plays the ping. The sound lives **here** rather than in `CoinPickup`, so a coin you touch as you die stays silent. |
+| `ShowCharacters()` | 626 | Opens and closes the shop. It calls `ApplySkin()`, because closing the shop goes through neither `StartGame` nor `BackToMenu`. |
+| `ResetDistance()` / `ResetCoins()` | 648 / 691 | Back to zero. The coins here are this run's only. |
+| `ShowDistance()` / `ShowCoins()` | 660 / 699 | **The one and only place** each of those numbers is written to the screen. |
+| `ShowGameOver()` | 681 | Fills in the three numbers on the end screen. |
+| `BuildCoinIcon()` | 711 | Puts a coin picture to the left of a number. It also sets `raycastTarget = false`. |
+| `BuildWalletCounter()` | 745 | The shop's coin total, built at the same size and with the same picture as the in-game one. |
+| `ShowRunCounters()` | 755 | Shows and hides both counters **together**. |
 
 > **Why "the one and only place" keeps coming up.** Two different methods writing
 > to the same piece of text is what made the distance counter flicker. And one
@@ -381,7 +381,7 @@ is why all of this stays cheap to run every single frame.
 
 ### The methods
 
-**`CurrentGap()` — line 168.** Three lines long, and one of the best decisions in
+**`CurrentGap()` — line 169.** Three lines long, and one of the best decisions in
 the project.
 
 ```csharp
@@ -396,7 +396,7 @@ one signal rather than two.
 The `Max` on the end is the safety net. However the game is tuned, the gap can
 never come out below 2.2.
 
-**`SpawnRock(row, otherRow)` — line 178.** The cleverest method in the project,
+**`SpawnRock(row, otherRow)` — line 179.** The cleverest method in the project,
 and what makes it safe is the **order** it does things in.
 
 ```csharp
@@ -435,7 +435,7 @@ One last detail: rocks are flipped by giving them a **negative size**, not by
 using Unity's Flip Y tickbox. The tickbox flips only the picture, which would
 leave invisible walls sitting in the wrong place.
 
-**`TryGetGapAt(x, out low, out high)` — line 260.** This says where the clear
+**`TryGetGapAt(x, out low, out high)` — line 261.** This says where the clear
 opening is at a given spot, so that rubbish and coins land inside the cave rather
 than inside a rock.
 
@@ -446,7 +446,7 @@ cave is much better than a coin buried in a wall.
 It is **public**, meaning other scripts are allowed to call it, because
 TrashSpawner, CoinSpawner and ObstacleDrift all need to ask it the same question.
 
-**`PickRock(lastIndex)` — line 288.** Picks a random rock, but never the same one
+**`PickRock(lastIndex)` — line 289.** Picks a random rock, but never the same one
 twice in a row:
 
 ```csharp
@@ -461,14 +461,14 @@ theory keep picking the same one forever. This version cannot.
 
 | Method | Line | What it does in the game |
 |---|---|---|
-| `StartSpawning()` | 94 | Starts building, with both rows parked just off the right of the screen. |
-| `StopSpawning()` | 119 | Stops building. GameManager then clears away whatever is left out there. |
-| `Update()` | 127 | Keeps both rows built out past the right edge of the screen. It hands each row **the other one**, and that is what stops the walls meeting. |
-| `Forget(row)` | 142 | Throws away the notes on rocks that are long gone. It counts **backwards** so that removing one does not shuffle the rest along. It is looped by hand because Unity's `RemoveAll` claims memory every time, twice a frame, which was enough to make the game stutter. |
-| `FillRow()` | 156 | Adds rocks until the row reaches far enough ahead. It stops at 10, because a rock with no width would otherwise loop forever. |
-| `DeepestBetween()` | 241 | The measuring tape. This is the method that makes "the walls can never meet" true. |
-| `RowReaches()` | 274 | Says whether a row has been built as far as a given spot yet. |
-| `HasValidRocks()` | 303 | Checks the rocks **and their pictures** before the run starts. `SpawnRock` measures the picture, so an empty slot would crash the game every frame. |
+| `StartSpawning()` | 95 | Starts building, with both rows parked just off the right of the screen. |
+| `StopSpawning()` | 120 | Stops building. GameManager then clears away whatever is left out there. |
+| `Update()` | 128 | Keeps both rows built out past the right edge of the screen. It hands each row **the other one**, and that is what stops the walls meeting. |
+| `Forget(row)` | 143 | Throws away the notes on rocks that are long gone. It counts **backwards** so that removing one does not shuffle the rest along. It is looped by hand because Unity's `RemoveAll` claims memory every time, twice a frame, which was enough to make the game stutter. |
+| `FillRow()` | 157 | Adds rocks until the row reaches far enough ahead. It stops at 10, because a rock with no width would otherwise loop forever. |
+| `DeepestBetween()` | 242 | The measuring tape. This is the method that makes "the walls can never meet" true. |
+| `RowReaches()` | 275 | Says whether a row has been built as far as a given spot yet. |
+| `HasValidRocks()` | 304 | Checks the rocks **and their pictures** before the run starts. `SpawnRock` measures the picture, so an empty slot would crash the game every frame. |
 ---
 
 ## 3. PlayerController.cs — why this is not Flappy Bird
@@ -686,7 +686,7 @@ which is the list of rubbish pieces to pick from.
 > learn the rhythm and plan around it. A random shove is just bad luck. One on a
 > fixed 11.5-second beat is something a player can get good at.
 
-**`Update()` — line 136.** This is the difficulty curve itself:
+**`Update()` — line 138.** This is the difficulty curve itself:
 
 ```csharp
 float progress = rampSeconds > 0f ? Mathf.Clamp01(elapsed / rampSeconds) : 1f;
@@ -702,7 +702,7 @@ once on its own. That second one is how the **fish** feels the current, because
 Rubbish is kept in check two ways at once: a timer that gradually speeds up, and
 a hard cap on how many pieces may be on screen.
 
-**`Surge(progress)` — line 164.** The line
+**`Surge(progress)` — line 166.** The line
 `elapsed % (surgeInterval + surgeSeconds)` makes the clock repeat every 11.5
 seconds, and that repeat is the rhythm the player learns.
 
@@ -715,7 +715,7 @@ rather than snapping on like a switch.
 The strength grows on the same counter as the speed, so shallow water shoves you
 a little and the deep cave shoves you about twice as hard.
 
-**`SpawnPiece()` — line 186.** It uses `magnitude`, which is the
+**`SpawnPiece()` — line 188.** It uses `magnitude`, which is the
 corner-to-corner length of a piece rather than its width, because a piece
 **spins** while it floats and its corners sweep further out than its sides.
 
@@ -731,12 +731,12 @@ it and carry it on the current.
 
 | Method | Line | What it does in the game |
 |---|---|---|
-| `Awake()` | 94 | Finds the rock spawner, because that is what owns the gap. |
-| `StartSpawning()` | 100 | Starts dropping rubbish, with the difficulty back at the beginning. |
-| `StopSpawning()` | 112 | Stops, **and puts the cave back to calm**. The speed is shared, so without that the difficulty would survive into the next run. |
-| `ResetRun()` | 120 | Wipes the progress. It resets the **surge** as well. `Update` would overwrite it anyway, but a stale value sitting in something called "current surge" makes both numbers untrustworthy when you are trying to debug. |
-| `PickTrash()` | 238 | Picks a random piece, never the same one twice in a row. |
-| `HasValidTrash()` | 253 | Checks the pieces and their pictures before the run starts. |
+| `Awake()` | 96 | Finds the rock spawner, because that is what owns the gap. |
+| `StartSpawning()` | 102 | Starts dropping rubbish, with the difficulty back at the beginning. |
+| `StopSpawning()` | 114 | Stops, **and puts the cave back to calm**. The speed is shared, so without that the difficulty would survive into the next run. |
+| `ResetRun()` | 122 | Wipes the progress. It resets the **surge** as well. `Update` would overwrite it anyway, but a stale value sitting in something called "current surge" makes both numbers untrustworthy when you are trying to debug. |
+| `PickTrash()` | 240 | Picks a random piece, never the same one twice in a row. |
+| `HasValidTrash()` | 255 | Checks the pieces and their pictures before the run starts. |
 
 ---
 
@@ -764,12 +764,12 @@ One wired slot: **Coin Prefab**, the coin to make copies of.
 > *bump*, and `PlayerHit` ends the run on any bump at all. So if that tickbox ever
 > came off, you would **die collecting a coin**.
 
-`CoinSprite` on line 52 is a **property** rather than a method. A property is
+`CoinSprite` on line 53 is a **property** rather than a method. A property is
 something you read like a value but which is really worked out on the spot. This
 one hands back the coin's picture, so the counter uses the same image with no
 extra slot for anyone to wire up wrongly.
 
-**`SpawnCoin()` — line 125.** Much like TrashSpawner's version, with one extra
+**`SpawnCoin()` — line 126.** Much like TrashSpawner's version, with one extra
 term: `clearance = radius + driftY + wallGap`.
 
 Coins get that extra bit of clearance and rubbish does not, and the reason
@@ -779,14 +779,14 @@ protection.
 
 It reuses `TrashSpin` to spin the coins, because a spin is a spin.
 
-**`Update()` — line 102.** The line `liveCoins.RemoveAll(coin => coin == null)`
+**`Update()` — line 103.** The line `liveCoins.RemoveAll(coin => coin == null)`
 matters more than it looks. Collected coins leave **holes** in the list. Without
 clearing them out, the on-screen cap keeps counting coins you already picked up,
 and eventually no new coins appear at all.
 
-The rest: **`Awake()`** line 75, **`StartSpawning()`** line 83 (a badly set-up
+The rest: **`Awake()`** line 76, **`StartSpawning()`** line 84 (a badly set-up
 coin simply does not start, because a run with no coins is better than an error
-every frame), **`StopSpawning()`** line 95 and **`HasValidCoin()`** line 164.
+every frame), **`StopSpawning()`** line 96 and **`HasValidCoin()`** line 165.
 
 ---
 

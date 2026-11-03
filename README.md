@@ -207,6 +207,7 @@ python docs/tools/build.py   # .md -> .docx
 | `docs/tools/build-code-doc.js` | The Markdown-to-Word converter `build.py` calls. |
 | `docs/tools/check-numbers.py` | Lists every script-vs-scene disagreement and fails if the guide quotes a number the game does not use. Run it after tuning. |
 | `docs/tools/estimate-pages.py` | Estimates the page count, since nothing here can render a `.docx`. |
+| `docs/tools/check-line-numbers.py` | Re-points the guide's `line N` references at the real source. Run it after editing any script, since adding a line moves every method below it. |
 
 `build.py` also repacks the file so `[Content_Types].xml` is the first entry in
 the archive. OPC requires that; Word does not care, but **Google Docs refuses
