@@ -45,10 +45,10 @@ Every number in here is measured from the project, not estimated.
 # Making the fish feel underwater
 
 - Flappy Bird: rise in hops, fall like a stone
-- Our fish sank at **4.6** units/sec — nearly the same
-- One missed tap cost half the gap
+- Our fish sank at **4.4** units/sec — nearly the same
+- One missed tap cost **1.52** units of a 2.6 gap
 - Fix: slow the fall to **3.2**, thicken the water
-- Result: 25% less punishing, still dives
+- Result: a missed tap now costs **1.00**. Still dives.
 
 > We tuned the rise three times. The hop height never actually changed across any of them.
 > The fall speed was the cause, and nobody had touched it.
@@ -109,11 +109,11 @@ Every number in here is measured from the project, not estimated.
 
 # Built for a phone, not a desktop
 
-- 9:16 portrait, laid out as fractions of the screen
+- 16:9 landscape, laid out as fractions of the screen
 - Screen edges computed once, not per object per frame
 - Music streams instead of loading into memory
 - Score counter was eating taps — a huge dead zone
-- Adaptive app icon, 58 sprites, 5 audio clips
+- Adaptive app icon, 57 sprites, 5 audio clips
 
 > The tap bug is our favourite. Anything drawn in the UI absorbs touches by default, so a
 > 1018x141 score counter across the top silently ate every tap that landed on it.
@@ -135,6 +135,6 @@ Every number in here is measured from the project, not estimated.
 - Fish skins bought with collected coins
 - Tuned on a real phone, not just in the Editor
 - Next: a sixth fish, sprite atlas, wider device testing
-- 30 commits, 20 September to 2 November
+- 35 commits, 20 September to 3 November
 
 > Thanks for listening. Happy to take questions, or hand you a phone.

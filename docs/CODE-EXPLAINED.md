@@ -505,9 +505,9 @@ to be most careful with.
 
 > **If you are asked "what makes it feel underwater?"** Two settings: the drag and
 > the sink cap. The drag makes the fish glide instead of snapping about. The cap
-> means one missed tap no longer costs you half the gap. Dropping the sink speed
-> from 4.6 to 3.2 made the game **25% less punishing**, and the fish still dives
-> properly.
+> means one missed tap no longer costs you half the gap. Capping the sink at 3.2
+> instead of 4.4 cut the drop from a missed tap from **1.52 units to 1.00**,
+> against a gap of 2.6, and the fish still dives properly.
 
 **Values it works out for itself:** `rb` (the physics body), `IsAlive`,
 `SwamThisFrame`, `homeX` and `homeY` (the spot it returns to, and the spot it bobs
@@ -1260,8 +1260,8 @@ single rock is placed, and a hard floor of 2.2 is locked into the code.
 **"What makes it not Flappy Bird?"**
 
 The water drag and the sink cap. A bird falls like a stone; our fish sinks at no
-more than 3.2. That one change made the game 25% less punishing, and it still
-dives properly.
+more than 3.2. That one change cut the drop from a missed tap from 1.52 units to
+1.00, against a gap of 2.6, and it still dives properly.
 
 **"Why have a global light at all if the fish has a lamp?"**
 
