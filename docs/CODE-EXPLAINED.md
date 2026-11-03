@@ -150,13 +150,19 @@ just means "there is only ever one of these, and everyone shares it".
 | **Bg Music Volume** | **0.5** (script 0.3) | The music underneath the sound effects. |
 | Coin Icon Size / Inset / Gap | 80 / 0 / 8 | The size and spacing of the coin picture next to the counter. |
 
-> **If you are asked "why so dark? 0.05 down to 0.02 is almost nothing."** This
-> is a good question and there is a good answer. What sells darkness is
-> **contrast**, not dimness. A screen that is evenly dim just looks muddy, your
-> eye adjusts to it within seconds, and outdoors on a phone it vanishes
-> completely. So we do two things at once: the cave goes very dark **and** the
-> fish's lamp goes bright. The **difference between them** is the effect you
-> actually see.
+> **If you are asked "why are those numbers so tiny? 0.05 and 0.02 are both
+> nearly nothing."** This is a good question and there is a good answer. Your eye
+> does not read brightness as a number. It reads it against whatever sits next to
+> it. What sells darkness is **contrast**, not dimness. A screen that is evenly
+> dim just looks muddy, your eye adjusts to it within seconds, and outdoors on a
+> phone it vanishes completely.
+>
+> So we do two things at once. The cave drops to **0.02**, which is **40%** of
+> where it started. At the same time the fish's lamp climbs to **1.6** times its
+> own brightness. Measured against each other, the lamp goes from about **20
+> times** as bright as the cave to about **80 times**. That four-fold stretch is
+> the effect you actually see, and it is why the numbers can be this small and
+> still do the job.
 
 One setting is worth explaining on its own. `Start Fraction From Left` is a
 **fraction**, not a distance. Four tenths of the way across the screen is four
