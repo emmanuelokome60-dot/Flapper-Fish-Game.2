@@ -139,7 +139,7 @@ just means "there is only ever one of these, and everyone shares it".
 
 | Setting | Value | What it does in the game |
 |---|---|---|
-| **Start Light** | **0.03** (script 0.35) | How bright the cave is at the mouth. |
+| **Start Light** | **0.05** (script 0.35) | How bright the cave is at the mouth. |
 | **Deep Light** | **0.02** (script 0.08) | How bright it is at the very deepest. |
 | **Darkest At Distance** | **300** (script 400) | How many metres until the cave is as dark as it gets. |
 | **Start Fraction From Left** | **0.4** (script 0.5) | Where the fish starts, as a share of the screen's width. |
@@ -150,7 +150,7 @@ just means "there is only ever one of these, and everyone shares it".
 | **Bg Music Volume** | **0.5** (script 0.3) | The music underneath the sound effects. |
 | Coin Icon Size / Inset / Gap | 80 / 0 / 8 | The size and spacing of the coin picture next to the counter. |
 
-> **If you are asked "why so dark? 0.03 down to 0.02 is almost nothing."** This
+> **If you are asked "why so dark? 0.05 down to 0.02 is almost nothing."** This
 > is a good question and there is a good answer. What sells darkness is
 > **contrast**, not dimness. A screen that is evenly dim just looks muddy, your
 > eye adjusts to it within seconds, and outdoors on a phone it vanishes
@@ -1247,7 +1247,7 @@ what that particular line does. Here is how:
 
 **"How does the game get harder?"**
 
-Three things at once, all off one depth number. The light dims from 0.03 to 0.02.
+Three things at once, all off one depth number. The light dims from 0.05 to 0.02.
 The gap narrows from 3.6 to 2.6. The cave speeds up from 4.5 to 8 over 150
 seconds.
 
@@ -1329,7 +1329,7 @@ had measured it.
 | PlayerController | Rotation Speed | 5 | **10** |
 | PlayerController | Max Tilt Up | 25 | **20** |
 | PlayerController | Max Tilt Down | -45 | **-40** |
-| GameManager | Start Light | 0.35 | **0.03** |
+| GameManager | Start Light | 0.35 | **0.05** |
 | GameManager | Deep Light | 0.08 | **0.02** |
 | GameManager | Darkest At Distance | 400 | **300** |
 | GameManager | Pause Dim Darkness | 0.78 | **0.7** |
@@ -1361,7 +1361,7 @@ The fish is **1.33** tall, of which **1.11** can hit things, and **1.09** wide.
 
 The gap runs from **3.6** down to **2.6**, with a hard floor of **2.2**.
 
-The light runs from **0.03** down to **0.02**, reaching its darkest at **300
+The light runs from **0.05** down to **0.02**, reaching its darkest at **300
 metres**.
 
 The speed runs from **4.5** up to **8** over **150 seconds**.

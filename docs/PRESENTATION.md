@@ -87,7 +87,7 @@ Every number in here is measured from the project, not estimated.
 
 # Darkness as a difficulty curve
 
-- The cave light drops from 0.03 to 0.02
+- The cave light drops from 0.05 to 0.02
 - The lamp on the fish is the only light you get
 - It brightens as the cave darkens, and flickers
 - Rocks are pure black — measured 0.000 luminance

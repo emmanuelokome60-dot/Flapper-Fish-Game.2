@@ -19,7 +19,7 @@ getting worse, not two separate systems."
 **Design idea:** one signal the player can read, instead of two that have to be
 balanced against each other.
 
-**Numbers:** darkest at **300m**. Light goes **0.03 → 0.02**.
+**Numbers:** darkest at **300m**. Light goes **0.05 → 0.02**.
 
 > **Likely question: how does the game get harder?**
 > Three things at once, all off that one depth number: the light dims, the gap

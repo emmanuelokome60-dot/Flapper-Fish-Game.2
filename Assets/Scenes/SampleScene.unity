@@ -1707,7 +1707,7 @@ MonoBehaviour:
   coinIconTextGap: 8
   unitsPerSecond: 5
   caveLight: {fileID: 619394801}
-  startLight: 0.03
+  startLight: 0.05
   deepLight: 0.02
   darkestAtDistance: 300
   startFractionFromLeft: 0.4
