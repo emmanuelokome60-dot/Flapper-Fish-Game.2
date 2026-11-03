@@ -502,6 +502,11 @@ to be most careful with.
 > very nearly switched off completely, and nobody had noticed, because nobody had
 > measured it. It looked perfectly reasonable sitting in the Unity window. We
 > raised it to **9**, which is a full body width of shove.
+>
+> If you are pushed on that: a full body width is the shove **deep in a run**.
+> Surges start at half strength and build, so the first ones move you about
+> **half** a body. The sum is `(Surge - 1) × Current Push ÷ Current Return`, which
+> at the deepest is `0.3 × 9 ÷ 2.5 = 1.08` against a fish 1.09 wide.
 
 > **If you are asked "what makes it feel underwater?"** Two settings: the drag and
 > the sink cap. The drag makes the fish glide instead of snapping about. The cap
